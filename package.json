@@ -1,0 +1,10 @@
+{
+  "name": "@kitsune-system/kitsune-common",
+  "version": "1.0.0",
+  "main": "dist/main.js",
+  "author": "Edward Nicholes Jr.",
+  "license": "GPL-3.0-only",
+  "sakuradite": {
+    "type": "app"
+  }
+}
