@@ -1,10 +1,14 @@
 {
-  "name": "@kitsune-system/kitsune-common",
-  "version": "1.0.0",
+  "name": "@kitsune-system/common",
+  "version": "1.1.0",
   "main": "dist/main.js",
   "author": "Edward Nicholes Jr.",
   "license": "GPL-3.0-only",
   "sakuradite": {
     "type": "app"
+  },
+  "dependencies": {
+    "@gamedevfox/katana": "^1.2.2",
+    "js-sha3": "^0.8.0"
   }
 }
