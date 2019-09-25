@@ -5,11 +5,17 @@ import {
 } from './index';
 
 export const KitsuneClient = request => {
-  const client = (command, input) => {
+  const client = (command, input, output) => {
     if(typeof input !== 'object')
       input = JSON.stringify(input);
 
-    return request.post(command, input).then(response => response);
+    const path = encodeURIComponent(command);
+    return request.post(path, input).then(res => {
+      if(output)
+        output(res);
+
+      return res;
+    });
   };
 
   client.wrap = (command, input, before = [], after = []) => {
