@@ -17,7 +17,7 @@ export const hashList = list => {
 export const hashString = string => hashList([STRING, Buffer.from(string, 'utf8').toString('base64')]);
 
 const headTailCheck = fn => (...args) => {
-  if(args.length > 2)
+  if(args.length !== 2)
     throw new Error('HashEdge must take 2 arguments');
 
   const [head, tail] = args;

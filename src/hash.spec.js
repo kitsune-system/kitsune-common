@@ -1,7 +1,7 @@
 import {
   deepHashEdge, hashEdge, hashList, hashString, pseudoRandom,
 } from './hash';
-import { RANDOM, READ, WRITE } from './nodes';
+import { RANDOM, READ, WRITE } from './index';
 
 describe('hash', () => {
   describe('hash(string)', () => {
