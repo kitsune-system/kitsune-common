@@ -1,31 +1,60 @@
 import { noOp } from '@gamedevfox/katana';
 
-export const Core = config => {
-  const systems = {};
+import { Collect } from './collect';
+import { CORE, SUPPORTS_COMMAND } from './index';
 
-  const getOrBuildSystem = systemId => {
-    if(systemId in systems)
-      return systems[systemId];
+export const value = v => ({ fn: () => (_, output) => output(v) });
+
+export const Core = (config, output) => {
+  const systems = {};
+  const values = {};
+
+  const getOrBuildSystem = (systemId, output = noOp) => {
+    if(systemId in systems) {
+      output(systems[systemId]);
+      return;
+    }
 
     if(!(systemId in config))
       throw new Error(`No core config found for id: ${systemId}`);
 
-    const { fn, bind = {} } = config[systemId];
+    const { fn, bind = {}, inject = {} } = config[systemId];
+    if(!fn)
+      throw new Error(`\`fn\` is not defined for system: ${systemId}`);
 
-    const deps = {};
+    const collectDeps = Collect();
+
+    // Bind
     Object.entries(bind).forEach(([name, id]) => {
-      const dep = getOrBuildSystem(id);
-      deps[name] = dep;
+      getOrBuildSystem(id, collectDeps(name));
     });
 
-    const system = fn(deps);
-    systems[systemId] = system;
+    // Inject
+    Object.entries(inject).forEach(([name, id]) => {
+      const collect = collectDeps(name);
 
-    return system;
+      if(name in values)
+        collect(values[name]);
+      else {
+        getOrBuildSystem(id, system => system(null, value => {
+          values[name] = value;
+          collect(value);
+        }));
+      }
+    });
+
+    collectDeps(deps => {
+      const system = fn(deps);
+      systems[systemId] = system;
+
+      output(system);
+    });
   };
 
-  return (systemId, output = noOp) => {
-    const system = getOrBuildSystem(systemId);
-    output(system);
-  };
+  getOrBuildSystem.isCore = true;
+
+  systems[CORE] = getOrBuildSystem;
+  systems[SUPPORTS_COMMAND] = (systemId, output) => output(systemId in systems || systemId in config);
+
+  output(getOrBuildSystem);
 };

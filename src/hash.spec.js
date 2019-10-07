@@ -39,11 +39,10 @@ describe('hash', () => {
     random().should.equal('uo587Bpkiy1hLGJ+JIwO4QZxrHKrdcVA3gY1FyWyb/c=');
   });
 
-  /* eslint-disable */
   it('hashList', () => {
     hashList([
       'AIijUH1v1Jxo6gBDm5rwI4Or80AwPum9At1AWbzw5Lw=',
-      'PFdJkeCnbCZzBF+bLC0Fb7vCRwbFKfv8hBwz6wH7yjk='
+      'PFdJkeCnbCZzBF+bLC0Fb7vCRwbFKfv8hBwz6wH7yjk=',
     ]).should.equal('fN/7GeSZDoqSPpyB7Ma9qGfq2fLdZs714JLUlm2HI3I=');
   });
 });
