@@ -1,4 +1,4 @@
-export const Collect = () => {
+export const Collector = () => {
   const values = {};
 
   let fns = [];

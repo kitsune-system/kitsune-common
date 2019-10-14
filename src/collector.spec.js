@@ -1,10 +1,10 @@
 import { fake } from 'sinon';
 
-import { Collect } from './collect';
+import { Collector } from './collector';
 
-describe('Collect', () => {
+describe('Collector', () => {
   it('should work', () => {
-    const collect = Collect();
+    const collect = Collector();
 
     const first = collect('first');
     const another = collect('another');
@@ -27,7 +27,7 @@ describe('Collect', () => {
   });
 
   it('should work if all values are already collected', () => {
-    const collect = Collect();
+    const collect = Collector();
 
     collect('first')(1);
     collect('another')('one');

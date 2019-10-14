@@ -1,60 +1,103 @@
 import { noOp } from '@gamedevfox/katana';
 
-import { Collect } from './collect';
-import { CORE, SUPPORTS_COMMAND } from './index';
+import { CORE, CORE_SUBSYSTEMS, SUPPORTS_COMMAND } from './index';
+import { BuilderSystem } from './system/builder-system';
+import { MemoizedSystem } from './system/memoized-system';
 
 export const value = v => ({ fn: () => (_, output) => output(v) });
 
-export const Core = (config, output) => {
-  const systems = {};
-  const values = {};
+export const Core = (config, output = noOp) => {
+  const root = MemoizedSystem();
 
-  const getOrBuildSystem = (systemId, output = noOp) => {
-    if(systemId in systems) {
-      output(systems[systemId]);
+  const builderSystem = BuilderSystem(config);
+  const coreSubsystems = [builderSystem];
+
+  const systemRouter = (systemId, output = noOp) => {
+    // TODO: Refactor the SHIZ out of this
+    if(systemId === SUPPORTS_COMMAND) {
+      output((systemId, output) => {
+        let subsystemIndex = 0;
+
+        const trySubsystem = (systemId, output) => {
+          const subsystem = coreSubsystems[subsystemIndex++];
+
+          if(subsystem === undefined) {
+            output(false);
+            return;
+          }
+
+          subsystem(SUPPORTS_COMMAND, supportsCommand => {
+            supportsCommand(systemId, isSupported => {
+              if(isSupported)
+                output(true);
+              else
+                trySubsystem(systemId, output);
+            });
+          });
+        };
+
+        trySubsystem(systemId, output);
+      });
       return;
     }
 
-    if(!(systemId in config))
-      throw new Error(`No core config found for id: ${systemId}`);
+    let subsystemIndex = 0;
 
-    const { fn, bind = {}, inject = {} } = config[systemId];
-    if(!fn)
-      throw new Error(`\`fn\` is not defined for system: ${systemId}`);
+    const trySubsystem = (systemId, output) => {
+      const subsystem = coreSubsystems[subsystemIndex++];
 
-    const collectDeps = Collect();
+      if(subsystem === undefined)
+        throw new Error(`System is not supported: ${systemId}`);
 
-    // Bind
-    Object.entries(bind).forEach(([name, id]) => {
-      getOrBuildSystem(id, collectDeps(name));
-    });
+      subsystem(SUPPORTS_COMMAND, supportsCommand => {
+        supportsCommand(systemId, isSupported => {
+          if(isSupported)
+            subsystem(systemId, output);
+          else
+            trySubsystem(systemId, output);
+        });
+      });
+    };
 
-    // Inject
-    Object.entries(inject).forEach(([name, id]) => {
-      const collect = collectDeps(name);
-
-      if(name in values)
-        collect(values[name]);
-      else {
-        getOrBuildSystem(id, system => system(null, value => {
-          values[name] = value;
-          collect(value);
-        }));
-      }
-    });
-
-    collectDeps(deps => {
-      const system = fn(deps);
-      systems[systemId] = system;
-
-      output(system);
-    });
+    trySubsystem(systemId, output);
   };
 
-  getOrBuildSystem.isCore = true;
+  root.source = systemRouter;
 
-  systems[CORE] = getOrBuildSystem;
-  systems[SUPPORTS_COMMAND] = (systemId, output) => output(systemId in systems || systemId in config);
+  const coreSystems = {
+    [SUPPORTS_COMMAND]: (systemId, output) => {
+      if(systemId in coreSystems)
+        output(true);
+      else {
+        root(SUPPORTS_COMMAND, supportsCommand => {
+          supportsCommand(systemId, output);
+        });
+      }
+    },
+  };
 
-  output(getOrBuildSystem);
+  const core = (systemId, output = noOp) => {
+    if(systemId in coreSystems)
+      output(coreSystems[systemId]);
+    else
+      root(systemId, output);
+  };
+
+  builderSystem.source = core;
+
+  coreSystems[CORE] = core;
+
+  core(SUPPORTS_COMMAND, supportsCommand => {
+    supportsCommand(CORE_SUBSYSTEMS, isSupported => {
+      if(!isSupported) {
+        output(core);
+        return;
+      }
+
+      core(CORE_SUBSYSTEMS, subsystemsFn => subsystemsFn(null, subsystems => {
+        subsystems.forEach(subsystem => coreSubsystems.push(subsystem));
+        output(core);
+      }));
+    });
+  });
 };

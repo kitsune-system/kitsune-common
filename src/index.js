@@ -1,9 +1,13 @@
 export { HttpSystem } from './http-system';
 export { Commands, bindCommands } from './commands';
 export { Core, value } from './core';
-export { deepHashEdge, edgeMap, hashEdge, hashList, hashString, pseudoRandom } from './hash';
+export {
+  deepHashEdge, edgeMap, hashEdge, hashList, hashString, pseudoRandom,
+} from './hash';
+export { WebSocketSystem } from './system/web-socket-system';
 
 export const CORE = 'daw45aDcByrMZp0jkaEMbQ7vhwY8ssv5RKzwLh/qz3U=';
+export const CORE_SUBSYSTEMS = 'aAemr3JkGpUnPkvdGNfSrp0aye3domWLA8ykwP7YPcY=';
 
 export const SUPPORTS_COMMAND = 'jY9q3mtCo4e1OJG0MlPGSP4CbGeaT22slihqoXVdDEQ=';
 
