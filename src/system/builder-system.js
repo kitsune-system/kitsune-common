@@ -65,11 +65,11 @@ export const BuilderSystem = config => {
     Object.entries(inject).forEach(([name, systemId]) => {
       const collect = collectDeps(name);
 
-      if(name in values)
-        collect(values[name]);
+      if(systemId in values)
+        collect(values[systemId]);
       else {
         builderSystem.source(systemId, system => system(null, value => {
-          values[name] = value;
+          values[systemId] = value;
           collect(value);
         }));
       }

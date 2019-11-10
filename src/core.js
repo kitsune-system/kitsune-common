@@ -6,6 +6,12 @@ import { MemoizedSystem } from './system/memoized-system';
 
 export const value = v => ({ fn: () => (_, output) => output(v) });
 
+const callSupportsCommand = (system, systemId, output = noOp) => {
+  system(SUPPORTS_COMMAND, supportsCommand => {
+    supportsCommand(systemId, output);
+  });
+};
+
 export const Core = (config, output = noOp) => {
   const root = MemoizedSystem();
 
@@ -26,13 +32,11 @@ export const Core = (config, output = noOp) => {
             return;
           }
 
-          subsystem(SUPPORTS_COMMAND, supportsCommand => {
-            supportsCommand(systemId, isSupported => {
-              if(isSupported)
-                output(true);
-              else
-                trySubsystem(systemId, output);
-            });
+          callSupportsCommand(subsystem, systemId, isSupported => {
+            if(isSupported)
+              output(true);
+            else
+              trySubsystem(systemId, output);
           });
         };
 
@@ -49,13 +53,11 @@ export const Core = (config, output = noOp) => {
       if(subsystem === undefined)
         throw new Error(`System is not supported: ${systemId}`);
 
-      subsystem(SUPPORTS_COMMAND, supportsCommand => {
-        supportsCommand(systemId, isSupported => {
-          if(isSupported)
-            subsystem(systemId, output);
-          else
-            trySubsystem(systemId, output);
-        });
+      callSupportsCommand(subsystem, systemId, isSupported => {
+        if(isSupported)
+          subsystem(systemId, output);
+        else
+          trySubsystem(systemId, output);
       });
     };
 
@@ -68,11 +70,8 @@ export const Core = (config, output = noOp) => {
     [SUPPORTS_COMMAND]: (systemId, output) => {
       if(systemId in coreSystems)
         output(true);
-      else {
-        root(SUPPORTS_COMMAND, supportsCommand => {
-          supportsCommand(systemId, output);
-        });
-      }
+      else
+        callSupportsCommand(root, systemId, output);
     },
   };
 
@@ -87,17 +86,15 @@ export const Core = (config, output = noOp) => {
 
   coreSystems[CORE] = core;
 
-  core(SUPPORTS_COMMAND, supportsCommand => {
-    supportsCommand(CORE_SUBSYSTEMS, isSupported => {
-      if(!isSupported) {
-        output(core);
-        return;
-      }
+  callSupportsCommand(core, CORE_SUBSYSTEMS, isSupported => {
+    if(!isSupported) {
+      output(core);
+      return;
+    }
 
-      core(CORE_SUBSYSTEMS, subsystemsFn => subsystemsFn(null, subsystems => {
-        subsystems.forEach(subsystem => coreSubsystems.push(subsystem));
-        output(core);
-      }));
-    });
+    core(CORE_SUBSYSTEMS, subsystemsFn => subsystemsFn(null, subsystems => {
+      subsystems.forEach(subsystem => coreSubsystems.push(subsystem));
+      output(core);
+    }));
   });
 };

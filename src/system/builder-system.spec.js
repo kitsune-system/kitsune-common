@@ -1,6 +1,6 @@
 import { noOp } from '@gamedevfox/katana';
 import { Collector } from '../collector';
-import { BuilderSystem } from './builder-core';
+import { BuilderSystem } from './builder-system';
 
 const config = {
   INTRODUCTION: {
