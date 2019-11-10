@@ -4,6 +4,8 @@ export { Core, value } from './core';
 export {
   deepHashEdge, edgeMap, hashEdge, hashList, hashString, pseudoRandom,
 } from './hash';
+export { MemoryGraph } from './graph/memory-graph';
+export { SetEdges, MapEdges, NamedEdges } from './graph/util';
 export { WebSocketSystem } from './system/web-socket-system';
 
 export const CORE = 'daw45aDcByrMZp0jkaEMbQ7vhwY8ssv5RKzwLh/qz3U=';
