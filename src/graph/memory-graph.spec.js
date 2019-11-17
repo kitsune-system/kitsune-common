@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
 import { RANDOM } from '../index';
-import { hashEdge, pseudoRandom } from '../hash';
+import { newHashEdge, pseudoRandom } from '../hash';
 
 import { MemoryGraph } from './memory-graph';
 
@@ -12,7 +12,7 @@ it('MemoryGraph', () => {
     nodes.push(random());
 
   const graph = MemoryGraph();
-  graph.hashEdge(hashEdge);
+  graph.hashEdge(newHashEdge);
 
   for(let i = 0; i < 20; i++) {
     const head = nodes[i % 5];
@@ -27,7 +27,7 @@ it('MemoryGraph', () => {
   const edge = graph.list()[2];
   edge.should.deep.equal([nodes[2], nodes[3]]);
 
-  const id = hashEdge(edge[0], edge[1]);
+  const id = newHashEdge(edge);
   graph.read(id).should.deep.equal(edge);
 
   Array.from(graph.heads(nodes[0]))

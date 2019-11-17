@@ -32,7 +32,7 @@ const config = {
   },
 };
 
-describe('BuilderSystem', () => {
+describe.skip('BuilderSystem', () => {
   it('should be able to handle circular dependancies', () => {
     const collect = Collector();
 
@@ -57,7 +57,7 @@ describe('BuilderSystem', () => {
     });
   });
 
-  it('should be able to detect circular dependancies is the dependancy is called too soon', () => {
+  it('should be able to detect circular dependancies is the dependancy if called too soon', () => {
     const collect = Collector();
 
     const core = BuilderSystem({

@@ -1,5 +1,7 @@
+import { expect } from 'chai';
+
 import {
-  deepHashEdge, hashEdge, hashList, hashString, pseudoRandom,
+  deepHashEdge, hashEdge, hashList, hashString, pseudoRandom, newHashEdge,
 } from './hash';
 import { RANDOM, READ, WRITE } from './index';
 
@@ -44,5 +46,21 @@ describe('hash', () => {
       'AIijUH1v1Jxo6gBDm5rwI4Or80AwPum9At1AWbzw5Lw=',
       'PFdJkeCnbCZzBF+bLC0Fb7vCRwbFKfv8hBwz6wH7yjk=',
     ]).should.equal('fN/7GeSZDoqSPpyB7Ma9qGfq2fLdZs714JLUlm2HI3I=');
+  });
+
+  it('newHashList', () => {
+    expect(() => {
+      newHashEdge(['hello']);
+    }).to.throw('`edge` must have 2 elements, instead had 1');
+
+    expect(() => {
+      newHashEdge(['hello', 'one', 'more']);
+    }).to.throw('`edge` must have 2 elements, instead had 3');
+
+    expect(() => {
+      newHashEdge([123, null]);
+    }).to.throw('Both `head` and `tail` must be strings: [123,null]');
+
+    newHashEdge(['first', 'second']).should.equal('uBihcDF5ROpBoGKiRDufReu4HINwSRGjYtfOv/bi9JA=');
   });
 });

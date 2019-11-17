@@ -15,7 +15,7 @@ export const MemoryGraph = () => {
 
     const [head, tail] = edge;
 
-    const id = hashEdge(head, tail);
+    const id = hashEdge([head, tail]);
     if(edgeMap[id])
       return id;
 

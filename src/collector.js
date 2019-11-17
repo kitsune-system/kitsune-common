@@ -2,26 +2,31 @@ export const Collector = () => {
   const values = {};
 
   let fns = [];
-  let valueCount = 0;
+  let pendingCount = 0;
+  let completeCount = 0;
 
   const checkValues = () => {
-    if(Object.keys(values).length === valueCount) {
+    if(fns.length !== 0 && pendingCount !== 0 && completeCount === pendingCount) {
       fns.forEach(fn => fn(values));
       fns = [];
     }
   };
 
   const result = arg => {
-    if(typeof arg === 'function') {
-      fns.push(arg);
-      checkValues();
-    } else {
-      valueCount++;
-      return value => {
+    pendingCount++;
+    return value => {
+      completeCount++;
+
+      if(arg)
         values[arg] = value;
-        checkValues();
-      };
-    }
+
+      checkValues();
+    };
+  };
+
+  result.done = fn => {
+    fns.push(fn);
+    checkValues();
   };
 
   return result;

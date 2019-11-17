@@ -31,6 +31,7 @@ const headTailCheck = fn => (...args) => {
   return fn(head, tail);
 };
 
+// FIX: Remove `egdeMap`
 export const edgeMap = {};
 export const hashEdge = headTailCheck((head, tail) => {
   const edge = hashList([EDGE, head, tail]);
@@ -53,4 +54,14 @@ export const pseudoRandom = seed => {
     hash = hashList([hash]);
     return hash;
   };
+};
+
+export const newHashEdge = edge => {
+  if(edge.length !== 2)
+    throw new Error(`\`edge\` must have 2 elements, instead had ${edge.length}: ${JSON.stringify(edge)}`);
+
+  if(!edge.every(node => typeof node === 'string'))
+    throw new Error(`Both \`head\` and \`tail\` must be strings: ${JSON.stringify(edge)}`);
+
+  return hashList([EDGE, ...edge]);
 };

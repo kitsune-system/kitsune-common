@@ -11,7 +11,10 @@ export { WebSocketSystem } from './system/web-socket-system';
 export const CORE = 'daw45aDcByrMZp0jkaEMbQ7vhwY8ssv5RKzwLh/qz3U=';
 export const CORE_SUBSYSTEMS = 'aAemr3JkGpUnPkvdGNfSrp0aye3domWLA8ykwP7YPcY=';
 
-export const SUPPORTS_COMMAND = 'jY9q3mtCo4e1OJG0MlPGSP4CbGeaT22slihqoXVdDEQ=';
+export const HAS_SYSTEM = 'jY9q3mtCo4e1OJG0MlPGSP4CbGeaT22slihqoXVdDEQ=';
+export const GET_SYSTEM = 'FIX: GET_SYSTEM';
+// Deprecated
+export const SUPPORTS_COMMAND = HAS_SYSTEM;
 
 export const READ = 'Tk6Aj8UWvn+0+nxpAcAuRgWqRRQEB92+8eFp6z3h6CQ=';
 export const WRITE = 'OopQyyACUbZJrQc+uRI50cq25wOY6H50F0m54im0dHE=';

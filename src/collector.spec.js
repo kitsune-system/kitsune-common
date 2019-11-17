@@ -13,7 +13,7 @@ describe('Collector', () => {
     first(1);
 
     const myFake = fake();
-    collect(myFake);
+    collect.done(myFake);
 
     myFake.args.should.deep.equal([]);
 
@@ -26,6 +26,27 @@ describe('Collector', () => {
     }]]);
   });
 
+  it('should work using nameless collectors', () => {
+    const collect = Collector();
+
+    const first = collect();
+    const another = collect();
+    const last = collect();
+
+    first();
+
+    const myFake = fake();
+    collect.done(myFake);
+
+    myFake.args.should.deep.equal([]);
+
+    last();
+    myFake.args.should.deep.equal([]);
+
+    another();
+    myFake.args.should.deep.equal([[{}]]);
+  });
+
   it('should work if all values are already collected', () => {
     const collect = Collector();
 
@@ -34,7 +55,7 @@ describe('Collector', () => {
     collect('last')(123);
 
     const myFake = fake();
-    collect(myFake);
+    collect.done(myFake);
     myFake.args.should.deep.equal([[{
       another: 'one', first: 1, last: 123,
     }]]);
