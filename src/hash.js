@@ -12,51 +12,12 @@ export const hashList = list => {
   return Buffer.from(hash.buffer()).toString('base64');
 };
 
-// =============================================================================
-
-export const hashString = string => hashList([STRING, Buffer.from(string, 'utf8').toString('base64')]);
-
-const headTailCheck = fn => (...args) => {
-  if(args.length !== 2)
-    throw new Error('HashEdge must take 2 arguments');
-
-  const [head, tail] = args;
-
-  if(!(head && tail)) {
-    throw new Error(
-      `\`head\` and \`tail\` must be set: { head: ${head}, tail: ${tail} }`
-    );
-  }
-
-  return fn(head, tail);
+export const hashString = string => {
+  const stringId = Buffer.from(string, 'utf8').toString('base64');
+  return hashList([STRING, stringId]);
 };
 
-// FIX: Remove `egdeMap`
-export const edgeMap = {};
-export const hashEdge = headTailCheck((head, tail) => {
-  const edge = hashList([EDGE, head, tail]);
-  edgeMap[edge] = [head, tail];
-  return edge;
-});
-
-export const deepHashEdge = headTailCheck((head, tail) => {
-  if(Array.isArray(head))
-    head = deepHashEdge(...head);
-  if(Array.isArray(tail))
-    tail = deepHashEdge(...tail);
-
-  return hashEdge(head, tail);
-});
-
-export const pseudoRandom = seed => {
-  let hash = seed;
-  return () => {
-    hash = hashList([hash]);
-    return hash;
-  };
-};
-
-export const newHashEdge = edge => {
+export const hashEdge = edge => {
   if(edge.length !== 2)
     throw new Error(`\`edge\` must have 2 elements, instead had ${edge.length}: ${JSON.stringify(edge)}`);
 
@@ -64,4 +25,21 @@ export const newHashEdge = edge => {
     throw new Error(`Both \`head\` and \`tail\` must be strings: ${JSON.stringify(edge)}`);
 
   return hashList([EDGE, ...edge]);
+};
+
+export const deepHashEdge = (head, tail) => {
+  if(Array.isArray(head))
+    head = deepHashEdge(...head);
+  if(Array.isArray(tail))
+    tail = deepHashEdge(...tail);
+
+  return hashEdge([head, tail]);
+};
+
+export const pseudoRandom = seed => {
+  let hash = seed;
+  return () => {
+    hash = hashList([hash]);
+    return hash;
+  };
 };

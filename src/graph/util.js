@@ -7,7 +7,7 @@ export const MapEdges = (id, values) => {
   Object.entries(values).forEach(([key, value]) => {
     edges.push([id, key]);
 
-    const keyEdge = hashEdge(id, key);
+    const keyEdge = hashEdge([id, key]);
     edges.push([keyEdge, value]);
   });
   return edges;
@@ -27,7 +27,7 @@ export const NamedEdges = (namedEdgeMap, rawEdges = []) => {
       tail = translateId(tail);
 
     const newEdge = [head, tail];
-    const id = hashEdge(...newEdge);
+    const id = hashEdge(newEdge);
     edgeMap[id] = newEdge;
 
     return id;

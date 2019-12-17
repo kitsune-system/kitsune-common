@@ -1,12 +1,15 @@
+export { AnimationFrame } from './animation-frame';
+export { Bucket } from './bucket';
 export { HttpSystem } from './http-system';
 export { Commands, bindCommands } from './commands';
 export { Core, value } from './core';
 export {
-  deepHashEdge, edgeMap, hashEdge, hashList, hashString, pseudoRandom,
+  deepHashEdge, hashEdge, hashList, hashString, pseudoRandom,
 } from './hash';
 export { MemoryGraph } from './graph/memory-graph';
 export { SetEdges, MapEdges, NamedEdges } from './graph/util';
 export { WebSocketSystem } from './system/web-socket-system';
+export { Valve } from './valve';
 
 export const CORE = 'daw45aDcByrMZp0jkaEMbQ7vhwY8ssv5RKzwLh/qz3U=';
 export const CORE_SUBSYSTEMS = 'aAemr3JkGpUnPkvdGNfSrp0aye3domWLA8ykwP7YPcY=';

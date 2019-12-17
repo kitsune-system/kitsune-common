@@ -1,7 +1,7 @@
 import { Radix, alphaLower, namedCopies } from '@gamedevfox/katana';
 
 import { Callback } from '../callback';
-import { newHashEdge } from '../hash';
+import { hashEdge } from '../hash';
 import { MemoryGraph } from '../graph/memory-graph';
 import { toAsync } from '../util';
 
@@ -70,7 +70,7 @@ const tests = () => {
 
 const getGraph = () => {
   const graph = MemoryGraph();
-  graph.hashEdge(newHashEdge);
+  graph.hashEdge(hashEdge);
 
   [
     // SYSTEM_FAMILY >> SYSTEM
