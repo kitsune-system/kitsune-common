@@ -1,7 +1,7 @@
 import { Pipe } from '@gamedevfox/katana';
 
 export const MemoryGraph = () => {
-  const [hashEdge, setHashEdge] = Pipe();
+  const [hashEdge, bindHashEdge] = Pipe();
 
   let count = 0;
 
@@ -10,9 +10,6 @@ export const MemoryGraph = () => {
   const tailMap = {};
 
   const write = edge => {
-    if(!setHashEdge())
-      throw new Error('`hashEdge` input not set');
-
     const [head, tail] = edge;
 
     const id = hashEdge([head, tail]);
@@ -65,7 +62,7 @@ export const MemoryGraph = () => {
   const list = () => Object.values(edgeMap);
 
   return {
-    hashEdge: setHashEdge, // Inputs
+    bindHashEdge, // Inputs
     read, write, erase, heads, tails, count: countFn, list, // Outputs
   };
 };

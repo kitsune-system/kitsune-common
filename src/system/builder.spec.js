@@ -70,7 +70,7 @@ const tests = () => {
 
 const getGraph = () => {
   const graph = MemoryGraph();
-  graph.hashEdge(hashEdge);
+  graph.bindHashEdge(hashEdge);
 
   [
     // SYSTEM_FAMILY >> SYSTEM

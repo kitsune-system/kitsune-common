@@ -1,5 +1,5 @@
 import sha3 from 'js-sha3';
-import { EDGE, STRING } from './index';
+import { EDGE, STRING, SET_N, LIST_N } from './index';
 
 const sha256 = sha3.sha3_256;
 
@@ -25,6 +25,19 @@ export const hashEdge = edge => {
     throw new Error(`Both \`head\` and \`tail\` must be strings: ${JSON.stringify(edge)}`);
 
   return hashList([EDGE, ...edge]);
+};
+
+const hashSet = set => hashList([SET_N, ...set.sort()]);
+
+export const hash = {
+  string: hashString,
+  edge: hashEdge,
+  set: hashSet,
+  list: list => hashList([LIST_N, ...list]),
+  map: map => {
+    const mapEdges = Object.entries(map).map(hashEdge);
+    return hashSet(mapEdges);
+  },
 };
 
 export const deepHashEdge = (head, tail) => {

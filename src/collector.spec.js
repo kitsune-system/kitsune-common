@@ -1,5 +1,7 @@
+import { copies, namedCopies } from '@gamedevfox/katana';
 import { fake } from 'sinon';
 
+import { Bucket } from './bucket';
 import { Collector } from './collector';
 
 describe('Collector', () => {
@@ -59,5 +61,45 @@ describe('Collector', () => {
     myFake.args.should.deep.equal([[{
       another: 'one', first: 1, last: 123,
     }]]);
+  });
+
+  it('example with copies', () => {
+    const collector = Collector();
+    const collectors = copies(3, collector);
+
+    const check = () => collectors.shift()();
+
+    const bucket = Bucket();
+    collector.done(bucket);
+
+    check();
+    bucket.empty().should.deep.equal([]);
+
+    check();
+    bucket.empty().should.deep.equal([]);
+
+    check();
+    bucket.empty().should.deep.equal([{
+      0: undefined, 1: undefined, 2: undefined,
+    }]);
+  });
+
+  it('example use with namedCopies', () => {
+    const collector = Collector();
+    const collectors = namedCopies(3, collector);
+
+    const bucket = Bucket();
+    collector.done(bucket);
+
+    collectors.b();
+    bucket.empty().should.deep.equal([]);
+
+    collectors.c();
+    bucket.empty().should.deep.equal([]);
+
+    collectors.a();
+    bucket.empty().should.deep.equal([{
+      a: undefined, b: undefined, c: undefined,
+    }]);
   });
 });

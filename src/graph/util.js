@@ -1,5 +1,6 @@
 import { hashEdge } from '../hash';
 
+// FIXME: Most of this is DEPRECATED in lieu of GraphTool
 export const SetEdges = (id, nodes) => nodes.map(node => [id, node]);
 
 export const MapEdges = (id, values) => {

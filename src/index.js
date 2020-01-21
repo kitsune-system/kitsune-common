@@ -4,7 +4,7 @@ export { HttpSystem } from './http-system';
 export { Commands, bindCommands } from './commands';
 export { Core, value } from './core';
 export {
-  deepHashEdge, hashEdge, hashList, hashString, pseudoRandom,
+  deepHashEdge, hashList, hashEdge, hashString, pseudoRandom,
 } from './hash';
 export { MemoryGraph } from './graph/memory-graph';
 export { SetEdges, MapEdges, NamedEdges } from './graph/util';

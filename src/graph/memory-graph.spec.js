@@ -12,7 +12,7 @@ it('MemoryGraph', () => {
     nodes.push(random());
 
   const graph = MemoryGraph();
-  graph.hashEdge(hashEdge);
+  graph.bindHashEdge(hashEdge);
 
   for(let i = 0; i < 20; i++) {
     const head = nodes[i % 5];

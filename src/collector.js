@@ -12,13 +12,16 @@ export const Collector = () => {
     }
   };
 
-  const result = arg => {
+  const result = (...args) => {
     pendingCount++;
+
     return value => {
       completeCount++;
 
-      if(arg)
-        values[arg] = value;
+      if(args.length) {
+        const [name] = args;
+        values[name] = value;
+      }
 
       checkValues();
     };
