@@ -1,6 +1,6 @@
 import { Map, Pipe, noOp, split } from '@gamedevfox/katana';
 
-import { Broker } from './broker';
+const Broker = () => {};
 
 export const Server = serverId => {
   // BIND_MAP_FN
@@ -61,8 +61,7 @@ export const Server = serverId => {
     if(systemId === 'ON_ALPHA') {
       const [pipeA, pipeP] = Pipe();
 
-      const unsplit = system(pipeA);
-      unsplits[pullId] = unsplit;
+      unsplits[pullId] = system(pipeA);
 
       system = pipeP;
     }

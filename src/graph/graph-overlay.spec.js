@@ -11,7 +11,7 @@ it('GraphOverlay', () => {
     nodes.push(random());
 
   const baseGraph = MemoryGraph();
-  baseGraph.bindHashEdge(hash.edge);
+  baseGraph.onHashEdge(hash.edge);
 
   baseGraph.write([nodes[1], nodes[2]]);
   baseGraph.write([nodes[1], nodes[3]]);

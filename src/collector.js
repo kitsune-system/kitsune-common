@@ -1,5 +1,8 @@
-export const Collector = () => {
-  const values = {};
+import { Pipe } from '@gamedevfox/katana';
+
+export const PartialCollector = () => {
+  const [collect, onCollect] = Pipe();
+  const [getValue, onGetValue] = Pipe();
 
   let fns = [];
   let pendingCount = 0;
@@ -7,21 +10,27 @@ export const Collector = () => {
 
   const checkValues = () => {
     if(fns.length !== 0 && pendingCount !== 0 && completeCount === pendingCount) {
-      fns.forEach(fn => fn(values));
+      fns.forEach(fn => fn(getValue()));
       fns = [];
     }
   };
 
-  const result = (...args) => {
+  const result = earlyName => {
     pendingCount++;
 
-    return value => {
+    return (...args) => {
       completeCount++;
 
-      if(args.length) {
-        const [name] = args;
-        values[name] = value;
-      }
+      let name, value;
+      if(args.length === 2)
+        [name, value] = args;
+      else if(args.length === 1)
+        [value] = args;
+
+      if(name === undefined)
+        name = earlyName;
+
+      collect(name, value);
 
       checkValues();
     };
@@ -31,6 +40,34 @@ export const Collector = () => {
     fns.push(fn);
     checkValues();
   };
+
+  result.onCollect = onCollect;
+  result.onGetValue = onGetValue;
+
+  return result;
+};
+
+export const Collector = () => {
+  const values = {};
+
+  const result = PartialCollector();
+  result.onCollect((name, value) => {
+    if(name !== undefined)
+      values[name] = value;
+  });
+  result.onGetValue(() => values);
+
+  return result;
+};
+
+export const ListCollector = () => {
+  const values = [];
+
+  const result = PartialCollector();
+  result.onCollect((_, value) => {
+    values.push(value);
+  });
+  result.onGetValue(() => values);
 
   return result;
 };

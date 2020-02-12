@@ -1,7 +1,8 @@
 import { Pipe } from '@gamedevfox/katana';
 
+export const MEMORY_GRAPH = 'Znsysq0ax3+FSmgiIQtRd8xb+wVQGBv24bv1U2dXyXs=';
 export const MemoryGraph = () => {
-  const [hashEdge, bindHashEdge] = Pipe();
+  const [hashEdge, onHashEdge] = Pipe();
 
   let count = 0;
 
@@ -62,7 +63,7 @@ export const MemoryGraph = () => {
   const list = () => Object.values(edgeMap);
 
   return {
-    bindHashEdge, // Inputs
+    onHashEdge, // Inputs
     read, write, erase, heads, tails, count: countFn, list, // Outputs
   };
 };

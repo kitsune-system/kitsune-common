@@ -11,20 +11,20 @@ it('GraphUnion', () => {
     nodes.push(random());
 
   const graphA = MemoryGraph();
-  graphA.bindHashEdge(hash.edge);
+  graphA.onHashEdge(hash.edge);
 
   graphA.write([nodes[1], nodes[2]]);
   graphA.write([nodes[3], nodes[4]]);
   graphA.write([nodes[5], nodes[6]]);
 
   const graphB = MemoryGraph();
-  graphB.bindHashEdge(hash.edge);
+  graphB.onHashEdge(hash.edge);
 
   graphB.write([nodes[1], nodes[3]]);
   graphB.write([nodes[5], nodes[6]]);
 
   const graphC = MemoryGraph();
-  graphC.bindHashEdge(hash.edge);
+  graphC.onHashEdge(hash.edge);
 
   graphC.write([nodes[1], nodes[4]]);
 

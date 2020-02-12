@@ -1,6 +1,6 @@
-import { Pipe, copies, noOp } from '@gamedevfox/katana';
+import { Pipe, noOp } from '@gamedevfox/katana';
 
-import { Callback } from '../callback';
+import { chain } from '../chain';
 import { Collector } from '../collector';
 
 export const Builder = () => {
@@ -12,66 +12,64 @@ export const Builder = () => {
   const systemInstMap = {};
 
   const build = (systemInstId, output = noOp, error = noOp) => {
-    const [edgeC, sysFamIdC, buildFnC] = copies(3, () => Callback());
-
     if(systemInstId in systemInstMap) {
       const instance = systemInstMap[systemInstId];
       output(instance);
       return;
     }
 
-    readEdge(systemInstId, edgeC);
-
     let systemId;
     let systemFamilyInstId;
-    edgeC.done(edge => {
-      if(!edge) {
-        error(new Error(`Could not find edge for systemInstId: ${systemInstId}`));
-        return;
-      }
+    chain(
+      ({ onOutput }) => readEdge(systemInstId, onOutput),
+      ({ input: edge, onOutput }) => {
+        if(!edge) {
+          error(new Error(`Could not find edge for systemInstId: ${systemInstId}`));
+          return;
+        }
 
-      [systemId, systemFamilyInstId] = edge;
-      readSystemFamilyId(systemFamilyInstId, sysFamIdC);
-    });
+        [systemId, systemFamilyInstId] = edge;
+        readSystemFamilyId(systemFamilyInstId, onOutput);
+      },
+      ({ input: systemFamilyId, onOutput }) => {
+        // FIX: Put errors here
 
-    sysFamIdC.done(systemFamilyId => {
-      // FIX: Put errors here
+        // Get build function
+        readBuildFn(systemFamilyId, onOutput);
+      },
+      ({ input: buildFn }) => {
+        if(!buildFn) {
+          error(new Error(`Could not find function for id: ${systemId}`));
+          return;
+        }
 
-      // Get build function
-      readBuildFn(systemFamilyId, buildFnC);
-    });
+        // Run build function
+        const systemFamily = buildFn();
 
-    const collector = Collector();
-    buildFnC.done(buildFn => {
-      if(!buildFn) {
-        error(new Error(`Could not find function for id: ${systemId}`));
-        return;
-      }
+        // FIX: Run modules to get everything
+        // const modules = readModules();
+        // modules.forEach(module => {
+        //   systemFamily = module(systemFamily);
+        // });
 
-      // Run build function
-      const systemFamily = buildFn();
+        // Cache systems
+        const collector = Collector();
+        Object.entries(systemFamily).forEach(([systemId, system]) => {
+          const collect = collector();
 
-      // FIX: Run modules to get everything
-      // const modules = readModules();
-      // modules.forEach(module => {
-      //   systemFamily = module(systemFamily);
-      // });
-
-      // Cache systems
-      Object.entries(systemFamily).forEach(([systemId, system]) => {
-        const edge = [systemId, systemFamilyInstId];
-        const collect = collector();
-        writeEdge(edge, systemInstId => {
-          systemInstMap[systemInstId] = system;
-          collect();
+          const edge = [systemId, systemFamilyInstId];
+          writeEdge(edge, systemInstId => {
+            systemInstMap[systemInstId] = system;
+            collect();
+          });
         });
-      });
-    });
 
-    collector.done(() => {
-      const result = systemInstMap[systemInstId];
-      output(result);
-    });
+        collector.done(() => {
+          const result = systemInstMap[systemInstId];
+          output(result);
+        });
+      },
+    );
   };
 
   const destroy = (systemInstId, output = noOp) => {

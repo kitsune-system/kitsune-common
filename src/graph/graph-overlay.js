@@ -4,9 +4,9 @@ import { MemoryGraph } from './memory-graph';
 
 export const GraphOverlay = baseGraph => {
   const writeGraph = MemoryGraph();
-  writeGraph.bindHashEdge(hash.edge);
+  writeGraph.onHashEdge(hash.edge);
   const eraseGraph = MemoryGraph();
-  eraseGraph.bindHashEdge(hash.edge);
+  eraseGraph.onHashEdge(hash.edge);
 
   const graph = {};
 

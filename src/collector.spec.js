@@ -2,7 +2,7 @@ import { copies, namedCopies } from '@gamedevfox/katana';
 import { fake } from 'sinon';
 
 import { Bucket } from './bucket';
-import { Collector } from './collector';
+import { Collector, ListCollector } from './collector';
 
 describe('Collector', () => {
   it('should work', () => {
@@ -63,8 +63,29 @@ describe('Collector', () => {
     }]]);
   });
 
+  it('list example', () => {
+    const collect = ListCollector();
+
+    const first = collect();
+    const another = collect('names-are-ignored');
+    const last = collect();
+
+    first(1);
+
+    const bucket = Bucket();
+    collect.done(bucket);
+
+    bucket.empty().should.deep.equal([]);
+
+    last(123);
+    bucket.empty().should.deep.equal([]);
+
+    another('one');
+    bucket.empty().should.deep.equal([[1, 123, 'one']]);
+  });
+
   it('example with copies', () => {
-    const collector = Collector();
+    const collector = ListCollector();
     const collectors = copies(3, collector);
 
     const check = () => collectors.shift()();
@@ -79,9 +100,7 @@ describe('Collector', () => {
     bucket.empty().should.deep.equal([]);
 
     check();
-    bucket.empty().should.deep.equal([{
-      0: undefined, 1: undefined, 2: undefined,
-    }]);
+    bucket.empty().should.deep.equal([[undefined, undefined, undefined]]);
   });
 
   it('example use with namedCopies', () => {
@@ -101,5 +120,28 @@ describe('Collector', () => {
     bucket.empty().should.deep.equal([{
       a: undefined, b: undefined, c: undefined,
     }]);
+  });
+
+  it('lateName', () => {
+    const collect = Collector();
+
+    const first = collect('first');
+    const another = collect('earlyName');
+    const last = collect();
+
+    first(1);
+
+    const myFake = fake();
+    collect.done(myFake);
+
+    myFake.args.should.deep.equal([]);
+
+    last('lateName', 123);
+    myFake.args.should.deep.equal([]);
+
+    another('overrideEarlyName', 'one');
+    myFake.args.should.deep.equal([[{
+      first: 1, lateName: 123, overrideEarlyName: 'one',
+    }]]);
   });
 });

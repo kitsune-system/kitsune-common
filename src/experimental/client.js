@@ -1,6 +1,6 @@
 import { Map, Pipe, noOp } from '@gamedevfox/katana';
 
-import { Broker } from './broker';
+const Broker = () => {};
 
 export const Client = (serverId, clientId) => {
   const [getRemoteName, bindGetRemoteName] = Pipe();

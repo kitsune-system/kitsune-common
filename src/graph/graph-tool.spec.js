@@ -1,17 +1,8 @@
 import { expect } from 'chai';
 
 import { hash } from '../hash';
-import { MemoryGraph } from '../graph/memory-graph';
 
-import { GraphTool } from './graph-tool';
-
-const GraphAndTool = () => {
-  const graph = MemoryGraph();
-  graph.bindHashEdge(hash.edge);
-
-  const tool = GraphTool(graph);
-  return [graph, tool];
-};
+import { GraphAndTool } from './graph-tool';
 
 describe('GraphTool', () => {
   it('edge', () => {
@@ -144,6 +135,30 @@ describe('GraphTool', () => {
       ['MY_MAP', EDGE_1],
       ['MY_MAP', EDGE_2],
       ['MY_MAP', EDGE_3],
+    ]);
+  });
+
+  it('key map', () => {
+    const [graph, tool] = GraphAndTool();
+
+    const map = {
+      ALPHA: 'ONE',
+      BETA: 'TWO',
+      OMEGA: 'FINAL',
+    };
+    tool.map.key('KEY_MAP', map);
+
+    const EDGE_1 = hash.edge(['KEY_MAP', 'ALPHA']);
+    const EDGE_2 = hash.edge(['KEY_MAP', 'BETA']);
+    const EDGE_3 = hash.edge(['KEY_MAP', 'OMEGA']);
+
+    graph.list().should.deep.equal([
+      ['KEY_MAP', 'ALPHA'],
+      [EDGE_1, 'ONE'],
+      ['KEY_MAP', 'BETA'],
+      [EDGE_2, 'TWO'],
+      ['KEY_MAP', 'OMEGA'],
+      [EDGE_3, 'FINAL'],
     ]);
   });
 

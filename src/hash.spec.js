@@ -70,6 +70,17 @@ describe('hash', () => {
     }).should.equal('R3ljC5HMy3na3LkSPZzI7gB/c9tvg5jWRA4bQQ8o/uA=');
   });
 
+  it('hash', () => {
+    hash('This is a String').should.equal('uiIaAOR2OAPV+LjfvsMn8HEWNBeoK9a7sYS24DkbAyM=');
+    hash('EDGE_HEAD', 'EDGE_TAIL').should.equal('1j/KS2O88OVYy9qv2oOYYwKsFQvqMrBpkJhsLSzda9k=');
+    hash(['THIS', 'IS', 'A', 'SET'])
+      .should.equal('TXhwOBFBuNqU2A79KHPrsOsuFVu0IDWJiPwix0w46y8=');
+    hash({
+      THIS: 'IS',
+      A: 'MAP',
+    }).should.equal('BGLKs73FypI/TlFG0U7bBZa7ThRMNGDsBMZhK7A77CU=');
+  });
+
   describe('deepHashEdge', () => {
     it('should edge hash a nested array of nodes', () => {
       const normal = hash.edge([RANDOM, hash.edge([READ, WRITE])]);

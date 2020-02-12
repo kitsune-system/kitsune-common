@@ -2,16 +2,17 @@ import { Pipe } from '@gamedevfox/katana';
 
 import { early } from '../early-io';
 
-export const DuplexChannels = duplex => {
+export const DuplexChannels = () => {
+  const [sendMessage, onMessage] = Pipe();
+  const [send, recvMessage] = Pipe();
+
   const [fireOpen, onOpen] = Pipe();
   const [fireClose, onClose] = Pipe();
 
   const channels = {};
 
   const openChannel = channelId => {
-    const send = msg => {
-      duplex.send({ type: 'CHANNEL_MESSAGE', channelId, msg });
-    };
+    const send = msg => sendMessage({ type: 'CHANNEL_MESSAGE', channelId, msg });
 
     const [fireMessage, onMessage] = Pipe();
     channels[channelId] = fireMessage;
@@ -20,15 +21,19 @@ export const DuplexChannels = duplex => {
   };
 
   const open = (channelId, cb) => {
-    duplex.send({ type: 'OPEN_CHANNEL', channelId });
+    sendMessage({ type: 'OPEN_CHANNEL', channelId });
 
     const channel = openChannel(channelId);
+
+    fireOpen(channel);
     cb(channel);
   };
 
   const close = channelId => {
-    duplex.send({ type: 'CLOSE_CHANNEL', channelId });
+    sendMessage({ type: 'CLOSE_CHANNEL', channelId });
+
     delete channels[channelId];
+    fireClose(channelId);
   };
 
   const handlers = {
@@ -50,7 +55,7 @@ export const DuplexChannels = duplex => {
     },
   };
 
-  duplex.onMessage(message => {
+  recvMessage(message => {
     const { type } = message;
     const handler = handlers[type];
 
@@ -60,5 +65,13 @@ export const DuplexChannels = duplex => {
     handler(message);
   });
 
-  return { open, close, onOpen, onClose };
+  return {
+    open, close, onOpen, onClose,
+    send, onMessage,
+  };
+};
+
+export const connect = ({ duplex, channels }) => {
+  duplex.onMessage(channels.send);
+  channels.onMessage(duplex.send);
 };

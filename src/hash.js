@@ -1,4 +1,6 @@
+import { ArgTypeSwitch } from '@gamedevfox/katana';
 import sha3 from 'js-sha3';
+
 import { EDGE, STRING, SET_N, LIST_N } from './index';
 
 const sha256 = sha3.sha3_256;
@@ -17,6 +19,7 @@ export const hashString = string => {
   return hashList([STRING, stringId]);
 };
 
+export const HASH_EDGE = 'VtJ3qZsAIJUTtOdf3L93cxjoBhL3tyVnxOjb60sE9F8=';
 export const hashEdge = edge => {
   if(edge.length !== 2)
     throw new Error(`\`edge\` must have 2 elements, instead had ${edge.length}: ${JSON.stringify(edge)}`);
@@ -29,16 +32,23 @@ export const hashEdge = edge => {
 
 const hashSet = set => hashList([SET_N, ...set.sort()]);
 
-export const hash = {
-  string: hashString,
-  edge: hashEdge,
-  set: hashSet,
-  list: list => hashList([LIST_N, ...list]),
-  map: map => {
-    const mapEdges = Object.entries(map).map(hashEdge);
-    return hashSet(mapEdges);
-  },
+const hashMap = map => {
+  const mapEdges = Object.entries(map).map(hashEdge);
+  return hashSet(mapEdges);
 };
+
+export const hash = ArgTypeSwitch({
+  str: hashString,
+  'str:str': (head, tail) => hashEdge([head, tail]),
+  arr: hashSet,
+  obj: hashMap,
+});
+
+hash.string = hashString;
+hash.edge = hashEdge;
+hash.set = hashSet;
+hash.list = list => hashList([LIST_N, ...list]);
+hash.map = hashMap;
 
 export const deepHashEdge = (head, tail) => {
   if(Array.isArray(head))

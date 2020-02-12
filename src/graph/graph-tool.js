@@ -1,8 +1,12 @@
-import { ArgTypeSwitch } from '@gamedevfox/katana';
+import { ArgTypeSwitch, Pipe } from '@gamedevfox/katana';
 
 import { hash } from '../hash';
+import { MemoryGraph } from './memory-graph';
 
-export const GraphTool = graph => {
+export const GRAPH_TOOL = 'Ez4OasJaagBUDqSUBqpOuZSXaz8/K+Ai1/jRCHnE7oo=';
+export const GraphTool = () => {
+  const [writeEdge, bindWriteEdge] = Pipe();
+
   const namedNodes = {};
 
   const translateId = name => name in namedNodes ? namedNodes[name] : name;
@@ -31,7 +35,7 @@ export const GraphTool = graph => {
   const get = name => namedNodes[name];
 
   const edge = (head, tail, name) => nameWrap(name, () => {
-    return graph.write([
+    return writeEdge([
       translateId(head),
       translateId(tail),
     ]);
@@ -39,10 +43,12 @@ export const GraphTool = graph => {
 
   const explicitSet = (id, nodes, name) => nameWrap(name, () => {
     id = translateId(id);
-    nodes.forEach(node => graph.write([
+
+    nodes.forEach(node => writeEdge([
       id,
       translateId(node),
     ]));
+
     return id;
   });
 
@@ -53,9 +59,11 @@ export const GraphTool = graph => {
 
   const explicitMap = (id, mapObj, name) => nameWrap(name, () => {
     id = translateId(id);
+
     const edgeIds = Object.entries(mapObj)
       .map(([name, value]) => edge(name, value));
-    edgeIds.forEach(edgeId => edge(id, edgeId));
+    edgeIds.forEach(edgeId => writeEdge([id, edgeId]));
+
     return id;
   });
 
@@ -82,32 +90,6 @@ export const GraphTool = graph => {
     'str:obj:str': explicitMap,
   });
 
-  const explicitList = (id, list, name) => nameWrap(name, () => {
-    id = translateId(id);
-
-    let container = id;
-    list.forEach(item => {
-      container = graph.write([
-        container,
-        translateId(item),
-      ]);
-    });
-
-    return id;
-  });
-
-  const list = (listArray, name) => {
-    const id = hash.list(listArray);
-    return explicitList(id, listArray, name);
-  };
-
-  tool.list = ArgTypeSwitch({
-    arr: list,
-    'arr:str': list,
-    'str:arr': explicitList,
-    'str:arr:str': explicitList,
-  });
-
   const explicitLabeledSet = (id, setObj, name) => nameWrap(name, () => {
     id = translateId(id);
 
@@ -131,5 +113,70 @@ export const GraphTool = graph => {
     'str:obj:str': explicitLabeledSet,
   });
 
+  const explicitList = (id, list, name) => nameWrap(name, () => {
+    id = translateId(id);
+
+    let container = id;
+    list.forEach(item => {
+      container = writeEdge([
+        container,
+        translateId(item),
+      ]);
+    });
+
+    return id;
+  });
+
+  const list = (listArray, name) => {
+    const id = hash.list(listArray);
+    return explicitList(id, listArray, name);
+  };
+
+  tool.list = ArgTypeSwitch({
+    arr: list,
+    'arr:str': list,
+    'str:arr': explicitList,
+    'str:arr:str': explicitList,
+  });
+
+  const explicitKeyMap = (id, mapObj, name) => nameWrap(name, () => {
+    id = translateId(id);
+
+    Object.entries(mapObj).forEach(([name, value]) => {
+      const edgeId = writeEdge([id, translateId(name)]);
+      writeEdge([edgeId, translateId(value)]);
+    });
+
+    return id;
+  });
+
+  const keyMap = (mapObj, name) => {
+    const id = hash.map(mapObj);
+    return explicitKeyMap(id, mapObj, name);
+  };
+
+  tool.map = {
+    key: ArgTypeSwitch({
+      obj: keyMap,
+      'obj:str': keyMap,
+      'str:obj': explicitKeyMap,
+      'str:obj:str': explicitKeyMap,
+    }),
+  };
+
+  tool.bindWriteEdge = bindWriteEdge;
+
   return tool;
+};
+
+export const GRAPH_AND_TOOL = '2xFHJHqk/K/6Qealo4DC/+WUjFXksouLjN3IB51u2nA=';
+export const GraphAndTool = () => {
+  const graph = MemoryGraph();
+  const tool = GraphTool();
+  const hashEdge = { hashEdge: hash.edge };
+
+  graph.onHashEdge(hashEdge.hashEdge);
+  tool.bindWriteEdge(graph.write);
+
+  return [graph, tool];
 };
