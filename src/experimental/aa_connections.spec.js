@@ -1,14 +1,16 @@
-import { noOp } from '@gamedevfox/katana';
-import WebSocket from 'ws';
+import { copies, noOp } from '@gamedevfox/katana';
 
 import { Collector } from '../collector';
+import { connect } from '../duplex/duplex';
+import { DuplexChannels } from '../duplex/duplex-channels';
+import { DuplexPair } from '../duplex/duplex-pair';
+
+import { activeInterfaceMap } from './active-interface-map';
 
 import { Client } from './client';
 import { Server } from './server';
-import { DuplexChannels } from './duplex-channels';
-import { WebSocketDuplex } from './web-socket-duplex';
-import { DuplexBroker } from './duplex-broker';
-import { activeInterfaceMap } from './active-interface-map';
+
+const DuplexBroker = () => {};
 
 export const interfaceMap = {
   // SERVER
@@ -49,88 +51,81 @@ const buildConnectById = (broker, duplexBroker) => {
   };
 };
 
+const connectDuplexBroker = (duplex, pull) => {
+  const channels = DuplexChannels();
+  connect({ duplex, channels });
+
+  const duplexBroker = DuplexBroker();
+  duplexBroker.onChannelOpen(channels.open);
+  channels.onOpen(duplexBroker.openChannel);
+  duplexBroker.bindBrokerPull(pull);
+  duplexBroker.bindGetInterface(systemId => interfaceMap[systemId]);
+
+  return duplexBroker;
+};
+
 describe.skip('WebSocket', () => {
-  let wss;
-
-  before(done => {
-    wss = new WebSocket.Server({ port: 1234 });
-    wss.on('listening', done);
-  });
-
-  after(done => wss.close(done));
-
   it('should work', done => {
+    const collect = Collector();
+    const [alphaClientDone, betaClientADone, betaClientBDone] = copies(3, () => collect());
+
     // Server
     const server = Server('test');
+    const clientA = Client('test', 'alpha');
+    const clientB = Client('test', 'beta');
 
-    wss.on('connection', ws => {
-      const duplex = WebSocketDuplex.NodeJS(ws);
-      const channels = DuplexChannels(duplex);
+    const connect = (client, cb = noOp) => {
+      const [serverDuplex, clientDuplex] = DuplexPair();
 
-      const duplexBroker = DuplexBroker({ channels });
-      duplexBroker.bindBrokerPull(server.pull);
-      duplexBroker.bindGetInterface(systemId => interfaceMap[systemId]);
+      const serverDuplexBroker = connectDuplexBroker(serverDuplex, server.pull);
+      const clientDuplexBroker = connectDuplexBroker(clientDuplex, client.pull);
 
-      const connectById = buildConnectById(server, duplexBroker);
-      connectById('MAP_VALUE', 'BIND_MAP_FN');
-      connectById('LOG_MESSAGE', 'ON_ALPHA');
+      // Server
+      server.addClientBroker(serverDuplexBroker);
 
-      server.addClientBroker(duplexBroker);
+      const serverConnectById = buildConnectById(server, serverDuplexBroker);
+      serverConnectById('MAP_VALUE', 'BIND_MAP_FN');
+      serverConnectById('LOG_MESSAGE', 'ON_ALPHA');
 
-      // connectById('ON_CHAT', 'SEND_CHAT');
-      // connectById('BIND_GET_REMOTE_NAME', 'GET_NAME', () => {
-      //   client.test(7890);
-      //   console.log('DONE');
-      // });
-    });
-
-    const buildClient = (name, cb = noOp) => {
-      const client = Client('test', name);
-
-      const ws = new WebSocket('ws://localhost:1234');
-      ws.on('open', () => {
-        const duplex = WebSocketDuplex.NodeJS(ws);
-        const channels = DuplexChannels(duplex);
-
-        const duplexBroker = DuplexBroker({ channels });
-        duplexBroker.bindBrokerPull(client.pull);
-        duplexBroker.bindGetInterface(systemId => interfaceMap[systemId]);
-
-        const connectById = buildConnectById(client, duplexBroker);
-        cb(client, connectById);
-      });
+      // Client
+      const connectById = buildConnectById(client, clientDuplexBroker);
+      cb(client, connectById);
     };
 
     // Client Alpha
-    buildClient('alpha', (client, connectById) => {
-      // connectById('BIND_MAP_FN', 'MAP_VALUE');
-      // connectById('ON_ALPHA', 'LOG_MESSAGE');
-
+    connect(clientA, (client, connectById) => {
       connectById('SEND_CHAT', 'ON_CHAT');
       connectById('GET_NAME', 'BIND_GET_REMOTE_NAME', () => {
         client.test(1234);
-        console.log('DONE A');
+
+        console.log('Alpha Done');
+        alphaClientDone();
       });
     });
 
     // Client Beta
-    buildClient('beta', (client, connectById) => {
-      // connectById('BIND_MAP_FN', 'MAP_VALUE');
-      // connectById('ON_ALPHA', 'LOG_MESSAGE');
-
+    connect(clientB, (client, connectById) => {
       connectById('SEND_CHAT', 'ON_CHAT');
       connectById('GET_NAME', 'BIND_GET_REMOTE_NAME', () => {
         client.test(7890);
-        console.log('DONE B');
+
+        console.log('Beta Client A Done');
+        betaClientADone();
       });
 
       setTimeout(() => {
         connectById('C2C_ALPHA', 'BIND_C2C', () => {
           client.c2cOut('Why hello there...');
+
+          console.log('Beta Client B Done');
+          betaClientBDone();
         });
       }, 200);
     });
 
-    setTimeout(done, 1500);
+    collect.done(() => {
+      console.log('== DONE ==');
+      done();
+    });
   });
 });

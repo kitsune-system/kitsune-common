@@ -14,7 +14,7 @@ const buildAgent = () => {
   const agent = Agent();
   agent.onResolve(({ input: systemId, onOutput, onError }) => {
     if(!(systemId in systemMap)) {
-      onError({ systemNotFound: true, systemId });
+      onError({ type: 'systemNotFound', systemId });
       return;
     }
 
@@ -27,40 +27,37 @@ const buildAgent = () => {
 
 describe('Agent', () => {
   it('should work', () => {
-    const [outB, releaseB, agentReleaseB] = copies(3, Bucket);
+    const [outB, releaseB] = copies(3, Bucket);
 
     const agent = buildAgent();
-    agent.onRelease(agentReleaseB);
+    agent.onRelease(releaseB);
 
-    agent.pull({ input: 'ALPHA', onOutput: outB, onRelease: releaseB });
+    agent.pull({ input: 'ALPHA', onOutput: outB });
     let output = outB.empty();
     output.should.deep.equal([alpha]);
     output[0](123).should.equal('ALPHA: 123');
 
     agent.release('ALPHA');
-    releaseB.wideEmpty().should.deep.equal([[]]);
-    agentReleaseB.empty().should.deep.equal(['ALPHA']);
+    releaseB.empty().should.deep.equal(['ALPHA']);
 
     // Can pull again after releasing
-    agent.pull({ input: 'ALPHA', onOutput: outB, onRelease: releaseB }); // Now it's OK
+    agent.pull({ input: 'ALPHA', onOutput: outB }); // Now it's OK
     output = outB.empty();
     output.should.deep.equal([alpha]);
 
     agent.release('ALPHA');
-    releaseB.wideEmpty().should.deep.equal([[]]);
-    agentReleaseB.empty().should.deep.equal(['ALPHA']);
+    releaseB.empty().should.deep.equal(['ALPHA']);
   });
 
   it('should error if system is currently pulled', done => {
     const agent = buildAgent();
-    agent.pull({ input: 'ALPHA', onOutput: () => {}, onRelease: () => {} });
+    agent.pull({ input: 'ALPHA', onOutput: () => {} });
 
     agent.pull({
       input: 'ALPHA',
       onOutput: () => {
         throw new Error('Should not succeed');
       },
-      onRelease: () => {},
       onError: error => {
         error.should.deep.equal({ type: 'systemCurrentlyPulled', systemId: 'ALPHA' });
         done();
@@ -76,9 +73,8 @@ describe('Agent', () => {
       onOutput: () => {
         throw new Error('Should not succeed');
       },
-      onRelease: () => {},
       onError: error => {
-        error.should.deep.equal({ systemNotFound: true, systemId: 'INVALID' });
+        error.should.deep.equal({ type: 'systemNotFound', systemId: 'INVALID' });
         done();
       },
     });

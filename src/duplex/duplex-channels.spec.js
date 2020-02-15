@@ -2,7 +2,8 @@ import { copies } from '@gamedevfox/katana';
 
 import { Collector } from '../collector';
 
-import { DuplexChannels, connect } from './duplex-channels';
+import { connect } from './duplex';
+import { DuplexChannels } from './duplex-channels';
 import { DuplexPair } from './duplex-pair';
 
 describe('DuplexChannels', () => {
@@ -10,8 +11,8 @@ describe('DuplexChannels', () => {
     const [duplexA, duplexB] = DuplexPair();
     const [channelsA, channelsB] = copies(2, () => DuplexChannels());
 
-    connect({ duplex: duplexA, channels: channelsA });
-    connect({ duplex: duplexB, channels: channelsB });
+    connect(channelsA, duplexA);
+    connect(duplexB, channelsB);
 
     const collect = Collector();
     const [collectA, collectB] = copies(2, collect);
@@ -36,10 +37,10 @@ describe('DuplexChannels', () => {
       });
     });
 
-    channelsA.open('ALPHA', channel => {
+    channelsA.open({ input: 'ALPHA', onOutput: channel => {
       // Send a message...
       channel.send('My Message');
-    });
+    } });
 
     collect.done(values => {
       values.should.deep.equal({ 0: 'ALPHA', 1: 'ALPHA' });

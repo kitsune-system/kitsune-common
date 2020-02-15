@@ -20,13 +20,12 @@ export const DuplexChannels = () => {
     return { id: channelId, send, onMessage: early(onMessage) };
   };
 
-  const open = (channelId, cb) => {
-    sendMessage({ type: 'OPEN_CHANNEL', channelId });
-
+  const open = ({ input: channelId, onOutput }) => {
     const channel = openChannel(channelId);
-
     fireOpen(channel);
-    cb(channel);
+
+    sendMessage({ type: 'OPEN_CHANNEL', channelId });
+    onOutput(channel);
   };
 
   const close = channelId => {
@@ -45,7 +44,9 @@ export const DuplexChannels = () => {
     },
     CHANNEL_MESSAGE: message => {
       const { channelId, msg } = message;
-      channels[channelId](msg);
+
+      const channel = channels[channelId];
+      channel(msg);
     },
     CLOSE_CHANNEL: message => {
       const { channelId } = message;
@@ -69,9 +70,4 @@ export const DuplexChannels = () => {
     open, close, onOpen, onClose,
     send, onMessage,
   };
-};
-
-export const connect = ({ duplex, channels }) => {
-  duplex.onMessage(channels.send);
-  channels.onMessage(duplex.send);
 };
