@@ -1,39 +1,48 @@
-import { Agent } from '../experimental/agent';
+import { Pipe } from '@gamedevfox/katana';
 
-import { INNER_MAP, INPUT, OUTER_MAP, OUTPUT, PASSIVE } from '../experimental/interface-graph';
+import { Agent } from '../experimental/agent';
+import { ACTIVE, INNER_MAP, INPUT, OUTER_MAP, OUTPUT, PASSIVE } from '../experimental/interface-graph';
 
 import { connect, connectAsync } from './duplex';
 import { DuplexAgent, DuplexAgentSource } from './duplex-agent';
 import { DuplexPair } from './duplex-pair';
 import { DuplexRequest, DuplexResponse } from './duplex-request';
 
-const alpha = ({ input: value, onOutput }) => {
-  onOutput(`ALPHA: ${value}`);
-};
+const [callBeta, beta] = Pipe();
+const [callDelta, delta] = Pipe();
+const [omega, onOmega] = Pipe();
 
 const systemMap = {
-  ALPHA: alpha, // INPUT
-  BETA: value => `BETA: ${value}`, // OUTPUT
+  ALPHA: ({ input: value, onOutput }) => onOutput(`ALPHA: ${value}`),
+  BETA: beta,
+  DELTA: delta,
+  OMEGA: omega,
 };
 
 const activeMap = {
   ALPHA: PASSIVE,
+  BETA: ACTIVE,
+  DELTA: ACTIVE,
+  OMEGA: PASSIVE,
 };
 
 const interfaceMap = {
   ALPHA: INNER_MAP,
+  BETA: OUTER_MAP,
+  DELTA: OUTPUT,
+  OMEGA: INPUT,
 };
 
 const inverseInterfaceMap = {
-  [OUTPUT]: INPUT, // ACTIVE
-  [INPUT]: OUTPUT, // PASSIVE
-  [OUTER_MAP]: INNER_MAP, // ACTIVE
-  [INNER_MAP]: OUTER_MAP, // PASSIVE
+  [OUTPUT]: INPUT,
+  [INPUT]: OUTPUT,
+  [OUTER_MAP]: INNER_MAP,
+  [INNER_MAP]: OUTER_MAP,
 };
 
 const channelInterfaceAdapters = {
-  [OUTPUT]: channel => channel.send,
-  [INPUT]: channel => channel.onOutput,
+  [OUTPUT]: channel => channel.onMessage,
+  [INPUT]: channel => channel.send,
   [OUTER_MAP]: channel => {
     const response = DuplexResponse();
     connect(channel, response);
@@ -103,14 +112,71 @@ const buildAgent = () => {
 };
 
 describe('DuplexAgent', () => {
-  it('should work', done => {
+  it('should work with OUTPUT system', done => {
+    const agent = buildAgent();
+
+    agent.pull({
+      input: 'DELTA',
+      onOutput: delta => {
+        delta(value => {
+          value.should.deep.equal(123);
+          done();
+        });
+
+        callDelta(123);
+      },
+      onError: () => {
+        throw new Error('Should not fail');
+      },
+    });
+  });
+
+  it('should work with INPUT system', done => {
+    const agent = buildAgent();
+
+    agent.pull({
+      input: 'OMEGA',
+      onOutput: omega => {
+        onOmega(value => {
+          value.should.equal(456);
+          done();
+        });
+
+        omega(456);
+      },
+      onError: error => {
+        console.log('E', error);
+        throw new Error('Should not fail');
+      },
+    });
+  });
+
+  it('should work with INNER_MAP system', done => {
     const agent = buildAgent();
 
     agent.pull({
       input: 'ALPHA',
-      onOutput: system => {
-        system({ input: 'hello', onOutput: result => {
+      onOutput: alpha => {
+        alpha({ input: 'hello', onOutput: result => {
           result.should.equal('ALPHA: hello');
+          done();
+        } });
+      },
+      onError: () => {
+        throw new Error('Should not fail');
+      },
+    });
+  });
+
+  it('should work with OUTER_MAP system', done => {
+    const agent = buildAgent();
+
+    agent.pull({
+      input: 'BETA',
+      onOutput: beta => {
+        beta(({ input: name, onOutput }) => onOutput(`Call me: ${name}`));
+        callBeta({ input: 'Peter', onOutput: result => {
+          result.should.equal('Call me: Peter');
           done();
         } });
       },
