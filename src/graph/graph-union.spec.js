@@ -1,40 +1,58 @@
-import { hash, pseudoRandom } from '../hash';
+import { chain } from '../chain';
+import { ListCollector } from '../collector';
+import { hashEdge, pseudoRandom } from '../hash';
 import { RANDOM } from '../index';
 
 import { GraphUnion } from './graph-union';
 import { MemoryGraph } from './memory-graph';
 
-it('GraphUnion', () => {
-  const random = pseudoRandom(RANDOM);
-  const nodes = [];
-  for(let i = 0; i < 7; i++)
-    nodes.push(random());
+describe('GraphUnion', () => {
+  it('should work', () => {
+    const random = pseudoRandom(RANDOM);
+    const nodes = [];
+    for(let i = 0; i < 7; i++)
+      nodes.push(random());
 
-  const graphA = MemoryGraph();
-  graphA.onHashEdge(hash.edge);
+    const graphA = MemoryGraph();
+    graphA.onHashEdge(hashEdge);
 
-  graphA.write([nodes[1], nodes[2]]);
-  graphA.write([nodes[3], nodes[4]]);
-  graphA.write([nodes[5], nodes[6]]);
+    const graphB = MemoryGraph();
+    graphB.onHashEdge(hashEdge);
 
-  const graphB = MemoryGraph();
-  graphB.onHashEdge(hash.edge);
+    const graphC = MemoryGraph();
+    graphC.onHashEdge(hashEdge);
 
-  graphB.write([nodes[1], nodes[3]]);
-  graphB.write([nodes[5], nodes[6]]);
+    const union = GraphUnion([graphA, graphB, graphC]);
 
-  const graphC = MemoryGraph();
-  graphC.onHashEdge(hash.edge);
+    const collect = ListCollector();
+    graphA.write({ input: [nodes[1], nodes[2]], onOutput: collect() });
+    graphA.write({ input: [nodes[3], nodes[4]], onOutput: collect() });
+    graphA.write({ input: [nodes[5], nodes[6]], onOutput: collect() });
 
-  graphC.write([nodes[1], nodes[4]]);
+    graphB.write({ input: [nodes[1], nodes[3]], onOutput: collect() });
+    graphB.write({ input: [nodes[5], nodes[6]], onOutput: collect() });
 
-  const union = GraphUnion([graphA, graphB, graphC]);
+    graphC.write({ input: [nodes[1], nodes[4]], onOutput: collect() });
 
-  const id = hash.edge([nodes[1], nodes[4]]);
-  union.read(id).should.deep.equal([nodes[1], nodes[4]]);
+    chain(
+      ({ onOutput }) => collect.done(onOutput),
+      ({ onOutput }) => {
+        const id = hashEdge([nodes[1], nodes[4]]);
 
-  Array.from(union.heads(nodes[4]))
-    .should.have.members([nodes[1], nodes[3]]);
-  Array.from(union.tails(nodes[1]))
-    .should.have.members([nodes[2], nodes[3], nodes[4]]);
+        const collect = ListCollector();
+        union.read({ input: id, onOutput: collect() });
+
+        union.heads({ input: nodes[4], onOutput: collect() });
+        union.tails({ input: nodes[1], onOutput: collect() });
+
+        collect.done(onOutput);
+      },
+      ({ input: [a, b, c] }) => {
+        a.should.have.members([nodes[1], nodes[4]]);
+
+        b.should.have.members([nodes[1], nodes[3]]);
+        c.should.have.members([nodes[2], nodes[3], nodes[4]]);
+      },
+    );
+  });
 });

@@ -10,12 +10,14 @@ export const MemoryGraph = () => {
   const headMap = {};
   const tailMap = {};
 
-  const write = edge => {
+  const write = ({ input: edge, onOutput }) => {
     const [head, tail] = edge;
 
     const id = hashEdge([head, tail]);
-    if(edgeMap[id])
-      return id;
+    if(edgeMap[id]) {
+      onOutput(id);
+      return;
+    }
 
     edgeMap[id] = edge;
 
@@ -29,41 +31,45 @@ export const MemoryGraph = () => {
 
     count++;
 
-    return id;
+    onOutput(id);
   };
 
-  const read = id => edgeMap[id];
+  const read = ({ input: id, onOutput }) => onOutput(edgeMap[id]);
 
-  const erase = id => {
-    if(!edgeMap[id])
-      return undefined;
+  const erase = ({ input: id, onOutput }) => {
+    if(!edgeMap[id]) {
+      onOutput(undefined);
+      return;
+    }
 
     const [head, tail] = edgeMap[id];
     delete edgeMap[id];
 
-    delete headMap[head][tail];
-    delete tailMap[tail][head];
+    headMap[head].delete(tail);
+    tailMap[tail].delete(head);
 
     count--;
 
-    return [head, tail];
+    onOutput([head, tail]);
   };
 
-  const heads = tail => {
+  const heads = ({ input: tail, onOutput }) => {
     const set = tailMap[tail];
-    return set ? new Set(set) : new Set();
+    const result = set ? Array.from(set) : [];
+    onOutput(result);
   };
 
-  const tails = head => {
+  const tails = ({ input: head, onOutput }) => {
     const set = headMap[head];
-    return set ? new Set(set) : new Set();
+    const result = set ? Array.from(set) : [];
+    onOutput(result);
   };
 
-  const countFn = () => count;
-  const list = () => Object.values(edgeMap);
+  const countFn = ({ onOutput }) => onOutput(count);
+  const list = ({ onOutput }) => onOutput(Object.values(edgeMap));
 
   return {
-    onHashEdge, // Inputs
-    read, write, erase, heads, tails, count: countFn, list, // Outputs
+    read, write, erase, heads, tails, count: countFn, list,
+    onHashEdge,
   };
 };

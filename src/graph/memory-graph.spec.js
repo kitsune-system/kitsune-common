@@ -1,44 +1,65 @@
 import { expect } from 'chai';
 
-import { RANDOM } from '../index';
+import { chain } from '../chain';
+import { ListCollector } from '../collector';
 import { hashEdge, pseudoRandom } from '../hash';
+import { RANDOM } from '../index';
 
 import { MemoryGraph } from './memory-graph';
 
-it('MemoryGraph', () => {
-  const random = pseudoRandom(RANDOM);
-  const nodes = [];
-  for(let i = 0; i < 5; i++)
-    nodes.push(random());
+describe('MemoryGraph', () => {
+  it('should work', done => {
+    const random = pseudoRandom(RANDOM);
+    const nodes = [];
+    for(let i = 0; i < 5; i++)
+      nodes.push(random());
 
-  const graph = MemoryGraph();
-  graph.onHashEdge(hashEdge);
+    const graph = MemoryGraph();
+    graph.onHashEdge(hashEdge);
 
-  for(let i = 0; i < 20; i++) {
-    const head = nodes[i % 5];
-    const tail = nodes[Math.floor(i * 13 / 7) % 5];
+    const collect = ListCollector();
 
-    const edge = [head, tail];
-    graph.write(edge);
-  }
+    for(let i = 0; i < 20; i++) {
+      const head = nodes[i % 5];
+      const tail = nodes[Math.floor(i * 13 / 7) % 5];
 
-  graph.count().should.equal(16);
+      const edge = [head, tail];
+      graph.write({ input: edge, onOutput: collect() });
+    }
 
-  const edge = graph.list()[2];
-  edge.should.deep.equal([nodes[2], nodes[3]]);
+    chain(
+      ({ onOutput }) => collect.done(onOutput),
+      ({ onOutput }) => graph.count({ onOutput }),
+      ({ input: count, onOutput }) => {
+        count.should.equal(16);
 
-  const id = hashEdge(edge);
-  graph.read(id).should.deep.equal(edge);
+        graph.heads({ input: nodes[0], onOutput });
+      },
+      ({ input: heads, onOutput }) => {
+        heads.should.have.members([nodes[0], nodes[3], nodes[1], nodes[4]]);
 
-  Array.from(graph.heads(nodes[0]))
-    .should.have.members([nodes[0], nodes[3], nodes[1], nodes[4]]);
-  Array.from(graph.heads(nodes[1]))
-    .should.have.members([nodes[1], nodes[4], nodes[2]]);
+        graph.heads({ input: nodes[1], onOutput });
+      },
+      ({ input: tails, onOutput }) => {
+        tails.should.have.members([nodes[1], nodes[4], nodes[2]]);
 
-  const removedEdge = graph.erase(id);
-  removedEdge.should.deep.equal([nodes[2], nodes[3]]);
+        const edgeId = hashEdge([nodes[2], nodes[3]]);
+        graph.erase({ input: edgeId, onOutput });
+      },
+      ({ input: erasedEdge, onOutput }) => {
+        erasedEdge.should.deep.equal([nodes[2], nodes[3]]);
 
-  graph.count().should.equal(15);
+        graph.count({ onOutput });
+      },
+      ({ input: count, onOutput }) => {
+        count.should.equal(15);
 
-  expect(graph.read(RANDOM)).to.be.undefined;
+        graph.read({ input: RANDOM, onOutput });
+      },
+      ({ input: missingEdge }) => {
+        expect(missingEdge).to.be.undefined;
+        done();
+      },
+    );
+  });
 });

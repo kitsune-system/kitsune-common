@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { GraphTool } from '../graph/graph-tool';
 import { MemoryGraph } from '../graph/memory-graph';
 import { hash } from '../hash';
@@ -15,29 +16,31 @@ export const PASSIVE = 'GY6BQYK/kR8v6npfq3jisq6k/0QfXhUw67ngdGgd7m8=';
 export const ACTIVE_INTERFACE_MAP = 'cOwnqlore+ShUtltSutETLqAJfu00mMgCAA1AwLOqeo=';
 export const INVERSE_INTERFACE_MAP = 'KF2Sqz6ndcje9nPXsMFceCzkgovHHIrbkQ/CAKS2IgE=';
 
-export const interfaceGraph = MemoryGraph();
-interfaceGraph.onHashEdge(hash.edge);
+// export const interfaceGraph = MemoryGraph();
+// interfaceGraph.onHashEdge(hash.edge);
+//
+// const tool = GraphTool();
 
-const tool = GraphTool();
-tool.bindWriteEdge(interfaceGraph.write);
-
-tool(INTERFACE, [
-  INPUT,
-  OUTPUT,
-  OUTER_MAP,
-  INNER_MAP,
-]);
-
-tool.map.key(ACTIVE_INTERFACE_MAP, {
-  [INPUT]: PASSIVE,
-  [OUTPUT]: ACTIVE,
-  [OUTER_MAP]: ACTIVE,
-  [INNER_MAP]: PASSIVE,
-});
-
-tool.map.key(INVERSE_INTERFACE_MAP, {
-  [INPUT]: OUTPUT,
-  [OUTPUT]: INPUT,
-  [OUTER_MAP]: INNER_MAP,
-  [INNER_MAP]: OUTER_MAP,
-});
+// FIXME: Restore
+// tool.bindWriteEdge(interfaceGraph.write);
+//
+// tool(INTERFACE, [
+//   INPUT,
+//   OUTPUT,
+//   OUTER_MAP,
+//   INNER_MAP,
+// ]);
+//
+// tool.map.key(ACTIVE_INTERFACE_MAP, {
+//   [INPUT]: PASSIVE,
+//   [OUTPUT]: ACTIVE,
+//   [OUTER_MAP]: ACTIVE,
+//   [INNER_MAP]: PASSIVE,
+// });
+//
+// tool.map.key(INVERSE_INTERFACE_MAP, {
+//   [INPUT]: OUTPUT,
+//   [OUTPUT]: INPUT,
+//   [OUTER_MAP]: INNER_MAP,
+//   [INNER_MAP]: OUTER_MAP,
+// });

@@ -1,50 +1,74 @@
-import { hash } from '../hash';
+import { hashEdge } from '../hash';
 
 import { MemoryGraph } from './memory-graph';
+import { ListCollector } from '../collector';
 
 export const GraphOverlay = baseGraph => {
   const writeGraph = MemoryGraph();
-  writeGraph.onHashEdge(hash.edge);
+  writeGraph.onHashEdge(hashEdge);
   const eraseGraph = MemoryGraph();
-  eraseGraph.onHashEdge(hash.edge);
+  eraseGraph.onHashEdge(hashEdge);
 
   const graph = {};
 
-  graph.write = edge => {
-    const id = hash.edge(edge);
+  graph.write = ({ input: edge, onOutput }) => {
+    const id = hashEdge(edge);
 
-    eraseGraph.erase(id);
-    writeGraph.write(edge);
+    const collect = ListCollector();
+    eraseGraph.erase({ input: id, onOutput: collect() });
+    writeGraph.write({ input: edge, onOutput: collect() });
 
-    return id;
+    collect.done(() => onOutput(id));
   };
 
-  graph.erase = id => {
-    const edge = graph.read(id);
+  graph.erase = ({ input: id, onOutput }) => {
+    graph.read({ input: id, onOutput: edge => {
+      const collect = ListCollector();
+      writeGraph.erase({ input: id, onOutput: collect() });
+      eraseGraph.write({ input: edge, onOutput: collect() });
 
-    writeGraph.erase(id);
-    eraseGraph.write(edge);
-
-    return edge;
+      collect.done(() => onOutput(edge));
+    } });
   };
 
-  graph.read = id => {
-    let edge = writeGraph.read(id);
-    if(!edge) {
-      if(eraseGraph.read(id))
-        return undefined;
+  graph.read = ({ input: id, onOutput }) => {
+    writeGraph.read({ input: id, onOutput: edge => {
+      if(edge) {
+        onOutput(edge);
+        return;
+      }
 
-      edge = baseGraph.read(id);
-    }
+      eraseGraph.read({ input: id, onOutput: edge => {
+        if(edge) {
+          onOutput(undefined);
+          return;
+        }
 
-    return edge;
+        baseGraph.read({ input: id, onOutput });
+      } });
+    } });
   };
 
-  const metaOp = opName => node => {
-    const nodes = baseGraph[opName](node);
-    eraseGraph[opName](node).forEach(n => nodes.delete(n));
-    writeGraph[opName](node).forEach(n => nodes.add(n));
-    return nodes;
+  const metaOp = opName => ({ input: id, onOutput }) => {
+    baseGraph[opName]({ input: id, onOutput: nodeList => {
+      const nodeSet = new Set(nodeList);
+
+      const collect = ListCollector();
+
+      const eraseC = collect();
+      eraseGraph[opName]({ input: id, onOutput: result => {
+        result.forEach(n => nodeSet.delete(n));
+        eraseC();
+      } });
+
+      const writeC = collect();
+      writeGraph[opName]({ input: id, onOutput: result => {
+        result.forEach(n => nodeSet.add(n));
+        writeC();
+      } });
+
+      collect.done(() => onOutput(Array.from(nodeSet)));
+    } });
   };
 
   graph.heads = metaOp('heads');

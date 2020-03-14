@@ -1,13 +1,16 @@
+export { Agent } from './agent';
 export { AnimationFrame } from './animation-frame';
 export { Bucket } from './bucket';
 export { Callback } from './callback';
-export { Commands, bindCommands } from './commands';
-export { Core, value } from './core';
-export { deepHashEdge, hashList, hashEdge, hashString, pseudoRandom } from './hash';
-export { HttpSystem } from './http-system';
+export { chain } from './chain';
+export { Collector, ListCollector } from './collector';
+export { DuplexAgent, DuplexAgentSource } from './duplex/duplex-agent';
+export { WebSocketDuplex } from './duplex/web-socket-duplex';
+export { deepHashEdge, hashList, hashEdge, hashMap, hashSet, hashString, pseudoRandom } from './hash';
 export { MemoryGraph } from './graph/memory-graph';
 export { SetEdges, MapEdges, NamedEdges } from './graph/util';
-export { WebSocketSystem } from './system/web-socket-system';
+export { Split } from './split';
+export { forEach, loop } from './util';
 export { Valve } from './valve';
 
 export const CORE = 'daw45aDcByrMZp0jkaEMbQ7vhwY8ssv5RKzwLh/qz3U=';

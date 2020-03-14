@@ -1,40 +1,70 @@
-import { Pipe, noOp } from '@gamedevfox/katana';
+import { Pipe } from '@gamedevfox/katana';
+
+import { ListCollector } from './collector';
 
 export const Switch = () => {
-  const [callDefault, onDefault] = Pipe();
+  const system = {};
 
-  const paths = [];
-  let switchValue = null;
-  let targets = [callDefault];
+  let count = 0;
+  const outputs = {};
+  const conditions = {};
+  const conditionIdMap = {};
 
-  const input = value => targets.forEach(target => {
-    target(value);
-  });
+  const [fireDefault, onDefault] = Pipe();
 
-  const updateTargets = () => {
-    const newTargets = paths
-      .filter(([fn]) => fn(switchValue))
-      .map(([_, input]) => input);
+  const getConditionId = ({ input: outputId, onOutput }) => onOutput(conditionIdMap[outputId]);
 
-    if(newTargets.length)
-      targets = newTargets;
-    else
-      targets = [callDefault];
+  const input = value => {
+    const outputIds = Object.keys(conditionIdMap);
+    let found = false;
+
+    const collect = ListCollector();
+    outputIds.forEach(outputId => {
+      const condC = collect();
+
+      const conditionId = conditionIdMap[outputId];
+      const condition = conditions[conditionId];
+
+      condition({ input: value, onOutput: result => {
+        if(result) {
+          found = true;
+          const output = outputs[outputId];
+          output(value);
+        }
+
+        condC();
+      } });
+    });
+
+    collect.done(() => {
+      if(!found)
+        fireDefault(value);
+    });
   };
 
-  const value = v => {
-    switchValue = v;
-    updateTargets();
+  const open = ({ onOutput }) => {
+    const id = ++count;
+    const outputId = `onOutput${id}`;
+    const conditionId = `onCondition${id}`;
+
+    conditionIdMap[outputId] = conditionId;
+
+    const [output, onOut] = Pipe();
+    const [condition, onCondition] = Pipe();
+
+    outputs[outputId] = output;
+    conditions[conditionId] = condition;
+
+    system[outputId] = onOut;
+    system[conditionId] = onCondition;
+
+    onOutput(outputId);
   };
 
-  const path = (fn, out = noOp) => {
-    const [input, output] = Pipe();
-    paths.push([fn, input]);
+  system.input = input;
+  system.open = open;
+  system.getConditionId = getConditionId;
+  system.onDefault = onDefault;
 
-    updateTargets();
-
-    out(output);
-  };
-
-  return { input, path, value, onDefault };
+  return system;
 };

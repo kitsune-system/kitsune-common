@@ -1,6 +1,6 @@
 import { copies } from '@gamedevfox/katana';
 
-import { Bucket } from '../bucket';
+import { Bucket } from './bucket';
 import { Agent } from './agent';
 
 const alpha = value => `ALPHA: ${value}`;

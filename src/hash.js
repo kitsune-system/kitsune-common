@@ -30,9 +30,9 @@ export const hashEdge = edge => {
   return hashList([EDGE, ...edge]);
 };
 
-const hashSet = set => hashList([SET_N, ...set.sort()]);
+export const hashSet = set => hashList([SET_N, ...set.sort()]);
 
-const hashMap = map => {
+export const hashMap = map => {
   const mapEdges = Object.entries(map).map(hashEdge);
   return hashSet(mapEdges);
 };

@@ -26,25 +26,25 @@ const systemFunctionMap = {
   [GRAPH_TOOL]: GraphTool,
 };
 
-const [graph, tool] = GraphAndTool();
-const GRAPH_AND_TOOL_BUILD = tool('BUILD', GRAPH_AND_TOOL);
-
-const GRAPH_AND_TOOL_INSTANCES = tool(GRAPH_AND_TOOL_BUILD, 'INSTANCES');
-const GRAPH_AND_TOOL_CONNECTIONS = tool(GRAPH_AND_TOOL_BUILD, 'CONNECTIONS');
-
-tool.map.key(GRAPH_AND_TOOL_INSTANCES, {
-  graph: MEMORY_GRAPH,
-  hashEdge: HASH_EDGE,
-  tool: GRAPH_TOOL,
-});
-
-tool(GRAPH_AND_TOOL_CONNECTIONS, {
-  [tool('graph', 'onHashEdge')]: tool('hashEdge', 'hashEdge'),
-  [tool('tool', 'bindWriteEdge')]: tool('graph', 'write'),
-});
-
-describe('Builder', () => {
+describe.skip('Builder [WIP]', () => {
   it('should work', done => {
+    const [graph, tool] = GraphAndTool();
+    const GRAPH_AND_TOOL_BUILD = tool('BUILD', GRAPH_AND_TOOL);
+
+    const GRAPH_AND_TOOL_INSTANCES = tool(GRAPH_AND_TOOL_BUILD, 'INSTANCES');
+    const GRAPH_AND_TOOL_CONNECTIONS = tool(GRAPH_AND_TOOL_BUILD, 'CONNECTIONS');
+
+    tool.map.key(GRAPH_AND_TOOL_INSTANCES, {
+      graph: MEMORY_GRAPH,
+      hashEdge: HASH_EDGE,
+      tool: GRAPH_TOOL,
+    });
+
+    tool(GRAPH_AND_TOOL_CONNECTIONS, {
+      [tool('graph', 'onHashEdge')]: tool('hashEdge', 'hashEdge'),
+      [tool('tool', 'bindWriteEdge')]: tool('graph', 'write'),
+    });
+
     const builder = Builder();
     builder.onHashEdge(returnValue(hashEdge));
     builder.onReadFunction(returnValue(systemId => systemFunctionMap[systemId]));
@@ -53,7 +53,7 @@ describe('Builder', () => {
 
       const tails = graph.tails(mapId);
 
-      Array.from(tails).forEach(key => {
+      tails.forEach(key => {
         const edgeId = hashEdge([mapId, key]);
         const [value] = graph.tails(edgeId);
         result[key] = value;
@@ -61,7 +61,7 @@ describe('Builder', () => {
 
       return result;
     }));
-    builder.onReadMap(returnValue(mapId => Array.from(graph.tails(mapId)).map(edgeId => graph.read(edgeId))));
+    builder.onReadMap(returnValue(mapId => graph.tails(mapId).map(edgeId => graph.read(edgeId))));
 
     builder.build({
       input: GRAPH_AND_TOOL_BUILD,

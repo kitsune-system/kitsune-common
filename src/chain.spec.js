@@ -41,8 +41,11 @@ describe('chain', () => {
         over9000({ number: input, result: onOutput });
       },
       ({ input, onOutput }) => {
-        input.should.equal(10975);
-        increment({ input, onOutput });
+        // An async callback just to mix things up :)
+        setTimeout(() => {
+          input.should.equal(10975);
+          increment({ input, onOutput });
+        }, 0);
       },
       ({ input }) => {
         input.should.equal(10976);

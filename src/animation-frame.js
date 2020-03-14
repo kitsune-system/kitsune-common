@@ -1,21 +1,21 @@
 import { Pipe } from '@gamedevfox/katana';
 
 export const AnimationFrame = () => {
-  const [cancelAnimationFrame, bindCancelAnimationFrame] = Pipe();
+  const [cancelAnimationFrame, onCancelAnimationFrame] = Pipe();
 
-  const [onFrameA, onFrame] = Pipe();
+  const [frame, onFrame] = Pipe();
 
   let requestAnimationFrame = null;
   let requestId = null;
 
   const frameLoop = time => {
-    onFrameA(time);
+    frame(time);
 
     if(requestAnimationFrame)
       requestId = requestAnimationFrame(frameLoop);
   };
 
-  const bindRequestAnimationFrame = fn => {
+  const onRequestAnimationFrame = fn => {
     requestAnimationFrame = fn;
 
     if(requestAnimationFrame)
@@ -24,5 +24,5 @@ export const AnimationFrame = () => {
       cancelAnimationFrame(requestId);
   };
 
-  return { bindRequestAnimationFrame, bindCancelAnimationFrame, onFrame };
+  return { onRequestAnimationFrame, onCancelAnimationFrame, onFrame };
 };

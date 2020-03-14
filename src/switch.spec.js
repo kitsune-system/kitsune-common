@@ -1,46 +1,69 @@
-import { copies } from '@gamedevfox/katana';
-
 import { Bucket } from './bucket';
-import { Collector } from './collector';
+import { ListCollector } from './collector';
 import { Switch } from './switch';
 
+const predicates = {
+  even: ({ input, onOutput }) => onOutput(input !== null && input % 2 === 0),
+  negative: ({ input, onOutput }) => onOutput(input < 0),
+  small: ({ input, onOutput }) => onOutput(input > 0 && input < 10),
+  large: ({ input, onOutput }) => onOutput(input >= 10),
+  positive: ({ input, onOutput }) => onOutput(input > 0),
+};
+
 describe('Switch', () => {
-  it('should work', () => {
+  it('should work', done => {
     const sw = Switch();
 
-    const collect = Collector();
-    sw.path(value => value !== null && value % 2 === 0, collect('outEven'));
-    sw.path(value => value < 0, collect('outNegative'));
-    sw.path(value => value > 0 && value < 10, collect('outSmall'));
-    sw.path(value => value >= 10, collect('outLarge'));
-    sw.path(value => value > 0, collect('outPositive'));
+    const open = ({ onOutput }) => {
+      sw.open({ onOutput: id => {
+        sw.getConditionId({ input: id, onOutput: conditionId => {
+          const output = sw[id];
+          const condition = sw[conditionId];
 
-    collect.done(({ outEven, outNegative, outSmall, outLarge, outPositive }) => {
-      const [evenBucket, negativeBucket, smallBucket, largeBucket, positiveBucket, defaultBucket] = copies(6, () => Bucket());
+          onOutput({ onOutput: output, onCondition: condition });
+        } });
+      } });
+    };
 
-      outEven(evenBucket);
-      outNegative(negativeBucket);
-      outSmall(smallBucket);
-      outLarge(largeBucket);
-      outPositive(positiveBucket);
-      sw.onDefault(defaultBucket);
+    const buckets = { default: Bucket() };
+    const collect = ListCollector();
+
+    const predicateNames = Object.keys(predicates);
+    predicateNames.forEach(name => {
+      const openC = collect();
+
+      open({ onOutput: ({ onOutput, onCondition }) => {
+        const predicate = predicates[name];
+
+        const bucket = Bucket();
+        buckets[name] = bucket;
+
+        onOutput(bucket);
+        onCondition(predicate);
+
+        openC();
+      } });
+    });
+
+    collect.done(() => {
+      // FIXME: Implement this
+      sw.onDefault(buckets.default);
 
       sw.input('missing');
 
-      for(let i = -5; i < 15; i++) {
-        sw.value(i);
+      for(let i = -5; i < 15; i++)
         sw.input(i);
-      }
 
-      sw.value('invalid');
       sw.input('another one');
 
-      evenBucket.empty().should.deep.equal([-4, -2, 0, 2, 4, 6, 8, 10, 12, 14]);
-      negativeBucket.empty().should.deep.equal([-5, -4, -3, -2, -1]);
-      smallBucket.empty().should.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-      largeBucket.empty().should.deep.equal([10, 11, 12, 13, 14]);
-      positiveBucket.empty().should.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
-      defaultBucket.empty().should.deep.equal(['missing', 'another one']);
+      buckets.even.empty().should.deep.equal([-4, -2, 0, 2, 4, 6, 8, 10, 12, 14]);
+      buckets.negative.empty().should.deep.equal([-5, -4, -3, -2, -1]);
+      buckets.small.empty().should.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+      buckets.large.empty().should.deep.equal([10, 11, 12, 13, 14]);
+      buckets.positive.empty().should.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]);
+      buckets.default.empty().should.deep.equal(['missing', 'another one']);
+
+      done();
     });
   });
 });

@@ -1,38 +1,79 @@
-import { hash, pseudoRandom } from '../hash';
+import { chain } from '../chain';
+import { ListCollector } from '../collector';
+import { hashEdge, pseudoRandom } from '../hash';
 import { RANDOM } from '../index';
 
 import { GraphOverlay } from './graph-overlay';
 import { MemoryGraph } from './memory-graph';
 
-it('GraphOverlay', () => {
-  const random = pseudoRandom(RANDOM);
-  const nodes = [];
-  for(let i = 0; i < 10; i++)
-    nodes.push(random());
+describe('GraphOverlay', () => {
+  it('should work', done => {
+    const random = pseudoRandom(RANDOM);
+    const nodes = [];
+    for(let i = 0; i < 10; i++)
+      nodes.push(random());
 
-  const baseGraph = MemoryGraph();
-  baseGraph.onHashEdge(hash.edge);
+    const baseGraph = MemoryGraph();
+    baseGraph.onHashEdge(hashEdge);
 
-  baseGraph.write([nodes[1], nodes[2]]);
-  baseGraph.write([nodes[1], nodes[3]]);
-  baseGraph.write([nodes[4], nodes[5]]);
-  baseGraph.write([nodes[6], nodes[7]]);
+    const graph = GraphOverlay(baseGraph);
 
-  const graph = GraphOverlay(baseGraph);
+    const baseEdgesC = ListCollector();
+    baseGraph.write({ input: [nodes[1], nodes[2]], onOutput: baseEdgesC() });
+    baseGraph.write({ input: [nodes[1], nodes[3]], onOutput: baseEdgesC() });
+    baseGraph.write({ input: [nodes[4], nodes[5]], onOutput: baseEdgesC() });
+    baseGraph.write({ input: [nodes[6], nodes[7]], onOutput: baseEdgesC() });
 
-  Array.from(baseGraph.heads(nodes[5])).should.have.members([nodes[4]]);
-  Array.from(graph.heads(nodes[5])).should.have.members([nodes[4]]);
-  Array.from(baseGraph.tails(nodes[1])).should.have.members([nodes[2], nodes[3]]);
-  Array.from(graph.tails(nodes[1])).should.have.members([nodes[2], nodes[3]]);
+    chain(
+      ({ onOutput }) => baseEdgesC.done(onOutput),
+      ({ onOutput }) => {
+        const resultC = ListCollector();
+        baseGraph.heads({ input: nodes[5], onOutput: resultC() });
+        baseGraph.tails({ input: nodes[1], onOutput: resultC() });
 
-  graph.write([nodes[1], nodes[9]]);
+        graph.heads({ input: nodes[5], onOutput: resultC() });
+        graph.tails({ input: nodes[1], onOutput: resultC() });
 
-  Array.from(baseGraph.tails(nodes[1])).should.have.members([nodes[2], nodes[3]]);
-  Array.from(graph.tails(nodes[1])).should.have.members([nodes[2], nodes[3], nodes[9]]);
+        resultC.done(onOutput);
+      },
+      ({ input: [a, b, c, d], onOutput }) => {
+        a.should.deep.equal([nodes[4]]);
+        b.should.deep.equal([nodes[2], nodes[3]]);
 
-  const idToErase = hash.edge([nodes[1], nodes[2]]);
-  graph.erase(idToErase);
+        c.should.deep.equal([nodes[4]]);
+        d.should.deep.equal([nodes[2], nodes[3]]);
 
-  Array.from(baseGraph.tails(nodes[1])).should.have.members([nodes[2], nodes[3]]);
-  Array.from(graph.tails(nodes[1])).should.have.members([nodes[3], nodes[9]]);
+        graph.write({ input: [nodes[1], nodes[9]], onOutput });
+      },
+      ({ onOutput }) => {
+        const collect = ListCollector();
+
+        baseGraph.tails({ input: nodes[1], onOutput: collect() });
+        graph.tails({ input: nodes[1], onOutput: collect() });
+
+        collect.done(onOutput);
+      },
+      ({ input: [a, b], onOutput }) => {
+        a.should.have.members([nodes[2], nodes[3]]);
+        b.should.have.members([nodes[2], nodes[3], nodes[9]]);
+
+        const idToErase = hashEdge([nodes[1], nodes[2]]);
+        graph.erase({ input: idToErase, onOutput });
+      },
+      ({ onOutput }) => {
+        const collect = ListCollector();
+
+        baseGraph.tails({ input: nodes[1], onOutput: collect() });
+        graph.tails({ input: nodes[1], onOutput: collect() });
+
+        collect.done(onOutput);
+      },
+      ({ input: [a, b] }) => {
+        a.should.have.members([nodes[2], nodes[3]]);
+        b.should.have.members([nodes[3], nodes[9]]);
+
+        done();
+      },
+    );
+  });
 });

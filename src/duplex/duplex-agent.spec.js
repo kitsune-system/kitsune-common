@@ -1,6 +1,6 @@
 import { Pipe } from '@gamedevfox/katana';
 
-import { Agent } from '../experimental/agent';
+import { Agent } from '../agent';
 import { ACTIVE, INNER_MAP, INPUT, OUTER_MAP, OUTPUT, PASSIVE } from '../experimental/interface-graph';
 
 import { connect, connectAsync } from './duplex';

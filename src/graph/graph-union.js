@@ -1,26 +1,38 @@
-const mergeCall = (graphs, fnName) => id => {
+import { ListCollector } from '../collector';
+
+const mergeCall = (graphs, fnName) => ({ input: id, onOutput }) => {
   const result = new Set();
+
+  const collect = ListCollector();
   graphs.forEach(graph => {
-    graph[fnName](id).forEach(node => result.add(node));
+    graph[fnName]({ input: id, onOutput: collect() });
   });
-  return result;
+
+  collect.done(graphResults => {
+    graphResults.forEach(nodes => {
+      nodes.forEach(node => result.add(node));
+    });
+
+    onOutput(Array.from(result));
+  });
 };
 
 export const GraphUnion = graphs => {
   const union = {};
 
-  union.read = id => {
-    let result;
+  union.read = ({ input: id, onOutput }) => {
+    let edge;
+    const find = value => {
+      if(edge)
+        return;
 
-    for(const graph of graphs) {
-      const edge = graph.read(id);
-      if(edge) {
-        result = edge;
-        break;
+      if(value) {
+        edge = value;
+        onOutput(edge);
       }
-    }
+    };
 
-    return result;
+    graphs.forEach(graph => graph.read({ input: id, onOutput: find }));
   };
 
   union.heads = mergeCall(graphs, 'heads');

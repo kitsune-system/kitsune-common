@@ -26,7 +26,7 @@ export const DuplexAgent = () => {
       error({ type: 'invalidAgentMessageType', message });
   };
 
-  const channels = DuplexChannels('agent');
+  const channels = DuplexChannels();
 
   // FIXME: Memoize this
   let agentChannel = null;
@@ -85,7 +85,7 @@ export const DuplexAgent = () => {
 export const DuplexAgentSource = () => {
   const systems = {};
 
-  const channels = DuplexChannels('source');
+  const channels = DuplexChannels();
 
   const [pull, onPull] = Pipe();
   const onRelease = () => {};

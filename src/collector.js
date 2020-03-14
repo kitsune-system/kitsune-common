@@ -9,7 +9,7 @@ export const PartialCollector = () => {
   let completeCount = 0;
 
   const checkValues = () => {
-    if(fns.length !== 0 && pendingCount !== 0 && completeCount === pendingCount) {
+    if(fns.length !== 0 && completeCount === pendingCount) {
       fns.forEach(fn => fn(getValue()));
       fns = [];
     }
