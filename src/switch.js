@@ -1,6 +1,5 @@
-import { Pipe } from '@gamedevfox/katana';
-
 import { ListCollector } from './collector';
+import { Pipe } from './pipe';
 
 export const Switch = () => {
   const system = {};

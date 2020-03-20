@@ -1,4 +1,4 @@
-import { Pipe, noOp } from '@gamedevfox/katana';
+import { Pipe } from './pipe';
 
 export const Agent = () => {
   const pulls = {};
@@ -13,7 +13,7 @@ export const Agent = () => {
   };
 
   const [agentRelease, onRelease] = Pipe();
-  onRelease(noOp);
+  onRelease(() => {});
 
   const release = systemId => {
     agentRelease(systemId);

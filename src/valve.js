@@ -1,4 +1,4 @@
-import { Pipe } from '@gamedevfox/katana';
+import { Pipe } from './pipe';
 
 export const Valve = () => {
   const [output, onOutput] = Pipe();

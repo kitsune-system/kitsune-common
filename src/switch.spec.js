@@ -46,7 +46,6 @@ describe('Switch', () => {
     });
 
     collect.done(() => {
-      // FIXME: Implement this
       sw.onDefault(buckets.default);
 
       sw.input('missing');

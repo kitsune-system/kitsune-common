@@ -1,6 +1,8 @@
-import { ArgTypeSwitch, Pipe } from '@gamedevfox/katana';
+import { ArgTypeSwitch } from '@gamedevfox/katana';
 
 import { hash } from '../hash';
+import { Pipe } from '../pipe';
+
 import { MemoryGraph } from './memory-graph';
 
 export const GRAPH_TOOL = 'Ez4OasJaagBUDqSUBqpOuZSXaz8/K+Ai1/jRCHnE7oo=';

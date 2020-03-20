@@ -1,9 +1,13 @@
 {
   "name": "@kitsune-system/common",
-  "version": "1.3.0",
-  "main": "dist/main.js",
+  "version": "1.4.0",
   "author": "Edward Nicholes Jr.",
-  "license": "GPL-3.0-only",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/kitsune-system/kitsune-common.git"
+  },
+  "main": "dist/main.js",
   "sakuradite": {
     "type": "app"
   },

@@ -1,5 +1,3 @@
-import { noOp } from '@gamedevfox/katana';
-
 // FIXME: Test me
 export const splice = (output, spliceInput, spliceOutput) => {
   const input = output();
@@ -7,7 +5,7 @@ export const splice = (output, spliceInput, spliceOutput) => {
   output(spliceInput);
 };
 
-export const toAsync = fn => (input, output = noOp) => output(fn(input));
+export const toAsync = fn => (input, output = () => {}) => output(fn(input));
 
 export const loop = (fn, onOutput) => {
   const run = () => {
@@ -16,6 +14,7 @@ export const loop = (fn, onOutput) => {
       let asyncComplete = false;
       let stopFlag = false;
 
+      let result = [];
       fn({
         onOutput: () => {
           asyncComplete = true;
@@ -23,12 +22,15 @@ export const loop = (fn, onOutput) => {
           if(syncComplete)
             run();
         },
-        onStop: () => (stopFlag = true),
+        onStop: (...args) => {
+          result = args;
+          stopFlag = true;
+        },
       });
       syncComplete = true;
 
       if(stopFlag) {
-        onOutput();
+        onOutput(...result);
         return;
       }
 

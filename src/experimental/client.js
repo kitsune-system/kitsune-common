@@ -1,4 +1,6 @@
-import { Map, Pipe, noOp } from '@gamedevfox/katana';
+import { Map } from '@gamedevfox/katana';
+
+import { Pipe } from '../pipe';
 
 const Broker = () => {};
 
@@ -18,7 +20,7 @@ export const Client = (serverId, clientId) => {
   const mapValue = (key, cb) => cb(fruits(key));
 
   const [fireChat, onChat] = Pipe();
-  onChat(noOp);
+  onChat(() => {});
 
   const chats = `Hello! I am client ${getName()}.`.split(' ');
   setInterval(() => {

@@ -1,6 +1,5 @@
-import { Pipe } from '@gamedevfox/katana';
-
 import { early } from '../early-io';
+import { Pipe } from '../pipe';
 
 export const DuplexChannels = () => {
   const [sendMessage, onMessage] = Pipe();

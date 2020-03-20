@@ -1,4 +1,4 @@
-import { Pipe } from '@gamedevfox/katana';
+import { Pipe } from '../pipe';
 
 export const MEMORY_GRAPH = 'Znsysq0ax3+FSmgiIQtRd8xb+wVQGBv24bv1U2dXyXs=';
 export const MemoryGraph = () => {

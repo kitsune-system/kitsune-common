@@ -1,8 +1,6 @@
-import { Pipe } from '@gamedevfox/katana';
-
 import { chain } from './chain';
 import { Collector } from './collector';
-import { fromCallbacks } from './normalize';
+import { Pipe } from './pipe';
 
 export const BUILDER = 'jnjSYzAj+E7ZI2EguwP7gzloP54baupA4zOwnDKySas=';
 export const Builder = () => {
@@ -11,7 +9,7 @@ export const Builder = () => {
   const [readKeyMap, onReadKeyMap] = Pipe();
   const [readMap, onReadMap] = Pipe();
 
-  const build = fromCallbacks((systemId, buildOut, error) => {
+  const build = ({ input: systemId, onOutput: buildOut, onError }) => {
     chain(
       ({ onOutput }) => readFunction({ input: systemId, onOutput }),
       ({ input: fn }) => {
@@ -30,7 +28,7 @@ export const Builder = () => {
           ({ input: instancesId, onOutput }) => readKeyMap({ input: instancesId, onOutput }),
           ({ input: edgeSet, onOutput }) => {
             if(edgeSet === null) {
-              error({ type: 'systemNotFound', systemId });
+              onError({ type: 'systemNotFound', systemId });
               return;
             }
 
@@ -83,7 +81,7 @@ export const Builder = () => {
         });
       },
     );
-  });
+  };
 
   return {
     build,

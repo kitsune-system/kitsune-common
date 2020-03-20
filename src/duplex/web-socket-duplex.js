@@ -1,6 +1,5 @@
-import { Pipe } from '@gamedevfox/katana';
-
 import { early } from '../early-io';
+import { Pipe } from '../pipe';
 
 const buildDuplex = onMessageFn => webSocket => {
   const send = msg => {

@@ -8,11 +8,12 @@ describe('loop', () => {
       count += 2;
       result.push(count);
 
-      count < 10 ? onOutput() : onStop();
+      count < 10 ? onOutput() : onStop(count);
     };
 
-    loop(myFn, () => {
+    loop(myFn, finalCount => {
       result.should.deep.equal([2, 4, 6, 8, 10]);
+      finalCount.should.equal(10);
       done();
     });
   });
@@ -51,11 +52,11 @@ describe('forEach', () => {
       if(input < 5)
         onOutput();
       else
-        onStop();
+        onStop(result);
     };
 
-    forEach(list, myFn, () => {
-      result.should.deep.equal([1, 4, 9, 16, 25]);
+    forEach(list, myFn, myResult => {
+      myResult.should.deep.equal([1, 4, 9, 16, 25]);
       done();
     });
   });

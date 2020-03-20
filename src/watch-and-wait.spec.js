@@ -1,6 +1,5 @@
-import { Pipe } from '@gamedevfox/katana';
-
 import { Bucket } from './bucket';
+import { Pipe } from './pipe';
 import { WatchAndWait } from './watch-and-wait';
 
 describe('WatchAndWait', () => {

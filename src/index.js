@@ -9,6 +9,8 @@ export { WebSocketDuplex } from './duplex/web-socket-duplex';
 export { deepHashEdge, hashList, hashEdge, hashMap, hashSet, hashString, pseudoRandom } from './hash';
 export { MemoryGraph } from './graph/memory-graph';
 export { SetEdges, MapEdges, NamedEdges } from './graph/util';
+export { Layers } from './layers';
+export { Pipe } from './pipe';
 export { Split } from './split';
 export { forEach, loop } from './util';
 export { Valve } from './valve';

@@ -1,4 +1,4 @@
-import { copies, noOp } from '@gamedevfox/katana';
+import { copies } from '@gamedevfox/katana';
 
 import { Collector } from '../collector';
 import { connect } from '../duplex/duplex';
@@ -32,7 +32,7 @@ export const interfaceMap = {
 };
 
 const buildConnectById = (broker, duplexBroker) => {
-  return (remoteSystemId, localSystemId, cb = noOp) => {
+  return (remoteSystemId, localSystemId, cb = () => {}) => {
     const systemC = Collector();
 
     duplexBroker.pull(remoteSystemId, systemC('remoteSystem'));
@@ -74,7 +74,7 @@ describe.skip('WebSocket', () => {
     const clientA = Client('test', 'alpha');
     const clientB = Client('test', 'beta');
 
-    const connect = (client, cb = noOp) => {
+    const connect = (client, cb = () => {}) => {
       const [serverDuplex, clientDuplex] = DuplexPair();
 
       const serverDuplexBroker = connectDuplexBroker(serverDuplex, server.pull);

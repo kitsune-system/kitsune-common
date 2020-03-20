@@ -1,7 +1,6 @@
-import { Pipe } from '@gamedevfox/katana';
-
 import { Bucket } from './bucket';
 import { early } from './early-io';
+import { Pipe } from './pipe';
 
 describe('early(output)', () => {
   it('should work', () => {

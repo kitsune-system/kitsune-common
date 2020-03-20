@@ -1,4 +1,6 @@
-import { Pipe, identity } from '@gamedevfox/katana';
+import { identity } from '@gamedevfox/katana';
+
+import { Pipe } from './pipe';
 
 export const WatchAndWait = (fn = identity) => {
   let waits = [];

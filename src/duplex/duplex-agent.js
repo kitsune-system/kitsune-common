@@ -1,8 +1,8 @@
-import { Pipe } from '@gamedevfox/katana';
+import { ACTIVE } from '../experimental/interface-graph';
 
 import { chain } from '../chain';
 import { Collector } from '../collector';
-import { ACTIVE } from '../experimental/interface-graph';
+import { Pipe } from '../pipe';
 import { WatchAndWait } from '../watch-and-wait';
 
 import { DuplexChannels } from './duplex-channels';

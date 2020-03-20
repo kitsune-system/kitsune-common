@@ -1,4 +1,4 @@
-import { Pipe } from '@gamedevfox/katana';
+import { Pipe } from './pipe';
 
 import { GRAPH_AND_TOOL, GRAPH_TOOL, GraphAndTool, GraphTool } from './graph/graph-tool';
 import { MEMORY_GRAPH, MemoryGraph } from './graph/memory-graph';

@@ -1,11 +1,13 @@
-import { Map, Pipe, noOp, split } from '@gamedevfox/katana';
+import { Map, split } from '@gamedevfox/katana';
+
+import { Pipe } from '../pipe';
 
 const Broker = () => {};
 
 export const Server = serverId => {
   // BIND_MAP_FN
   const [mapFn, bindMapFn] = Pipe();
-  bindMapFn(noOp);
+  bindMapFn(() => {});
 
   setTimeout(() => {
     mapFn('omega', result => console.log(`[[OMEGA: ${result}]]`));
@@ -23,7 +25,7 @@ export const Server = serverId => {
 
   // ALPHA
   const [fireAlpha, onAlpha] = Pipe();
-  onAlpha(noOp);
+  onAlpha(() => {});
 
   let counter = 0;
   setInterval(() => {
